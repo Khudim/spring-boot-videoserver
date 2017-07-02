@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,7 +41,8 @@ public class MainController {
     }
 
     @RequestMapping(value = "/video", method = RequestMethod.GET)
-    public List<Video> getVideo(@RequestParam int page, @RequestParam int limit) {
+    public List<Video> getVideo(@RequestParam int page, @RequestParam int limit, HttpServletResponse response) {
+        response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
         return videoRepository.findAll(new PageRequest(page, limit)).getContent();
     }
 
