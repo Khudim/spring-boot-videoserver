@@ -1,0 +1,43 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="createVideoTable" author="system">
+        <createTable tableName="video">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="name" type="VARCHAR">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content_id" type="INT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="date" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="width" type="INT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="height" type="INT">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="createContentTable" author="system">
+        <createTable tableName="content">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="image" type="BLOB">
+                <constraints nullable="true"/>
+            </column>
+            <column name="path" type="VARCHAR">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>

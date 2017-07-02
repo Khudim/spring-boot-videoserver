@@ -1,0 +1,51 @@
+databaseChangeLog:
+  - preConditions:
+    - runningAs:
+       username: root
+
+  - changeSet:
+      id: 1
+      author: khudim
+      changes:
+        - createTable:
+            tableName: video
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(255)
+              - column:
+                  name: date
+                  type: bigint
+              - column:
+                  name: content_id
+                  type: bigint
+              - column:
+                  name: width
+                  type: int
+              - column:
+                  name: height
+                  type: int
+
+        - createTable:
+            tableName: content
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: image
+                  type: MEDIUMBLOB
+              - column:
+                  name: path
+                  type: varchar(255)
