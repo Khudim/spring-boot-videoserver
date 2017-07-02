@@ -1,8 +1,9 @@
 package com.khudim.controller;
 
 import com.khudim.dao.entity.Video;
-import com.khudim.dao.repository.ContentRepository;
 import com.khudim.dao.repository.VideoRepository;
+import com.khudim.dao.service.ContentService;
+import com.khudim.parser.HtmlParser;
 import com.khudim.scanner.FileScanner;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -28,16 +29,17 @@ import static com.khudim.utils.VideoHelper.getRangeBytesFromVideo;
 public class MainController {
 
     private static Logger log = LoggerFactory.getLogger(MainController.class);
-
-    private final ContentRepository contentRepository;
+    private final ContentService contentService;
     private final VideoRepository videoRepository;
     private final FileScanner fileScanner;
+    private final HtmlParser htmlParser;
 
     @Autowired
-    public MainController(ContentRepository contentRepository, VideoRepository videoRepository, FileScanner fileScanner) {
-        this.contentRepository = contentRepository;
+    public MainController(ContentService contentService, VideoRepository videoRepository, FileScanner fileScanner, HtmlParser htmlParser) {
+        this.contentService = contentService;
         this.videoRepository = videoRepository;
         this.fileScanner = fileScanner;
+        this.htmlParser = htmlParser;
     }
 
     @RequestMapping(value = "/video", method = RequestMethod.GET)
@@ -51,9 +53,14 @@ public class MainController {
         fileScanner.addVideoToBase();
     }
 
+    @RequestMapping(value = "/downloadVideo", method = RequestMethod.GET)
+    public void startParse() {
+        htmlParser.downloadVideo();
+    }
+
     @RequestMapping(value = "/img/{contentId}", produces = MediaType.IMAGE_JPEG_VALUE)
     public byte[] getImage(@PathVariable long contentId) {
-        return contentRepository.getImage(contentId);
+        return contentService.getImage(contentId);
     }
 
     @RequestMapping(value = "/video/{contentId}", method = RequestMethod.GET)
@@ -61,7 +68,7 @@ public class MainController {
                            HttpServletResponse response,
                            @RequestHeader(required = false) String range) {
 
-        String filePath = contentRepository.getVideoPath(contentId);
+        String filePath = contentService.getVideoPath(contentId);
         byte[] bytes = new byte[0];
         try {
             if (StringUtils.isBlank(range)) {

@@ -2,8 +2,8 @@ package com.khudim.scanner;
 
 import com.khudim.dao.entity.Content;
 import com.khudim.dao.entity.Video;
-import com.khudim.dao.repository.ContentRepository;
 import com.khudim.dao.repository.VideoRepository;
+import com.khudim.dao.service.ContentService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,12 +33,12 @@ public class FileScanner {
 
     @Value("${app.scanPath}")
     private String directory;
-    private final ContentRepository contentRepository;
+    private final ContentService contentService;
     private final VideoRepository videoRepository;
 
     @Autowired
-    public FileScanner(ContentRepository contentRepository, VideoRepository videoRepository) {
-        this.contentRepository = contentRepository;
+    public FileScanner(ContentService contentService, VideoRepository videoRepository) {
+        this.contentService = contentService;
         this.videoRepository = videoRepository;
     }
 
@@ -48,7 +48,7 @@ public class FileScanner {
             Content content = new Content();
             content.setPath(path.toString());
             content.setImage(getImageFromVideo(path));
-            contentRepository.save(content);
+            contentService.save(content);
 
             int[] videoSize = findVideoSize(path.toString());
 
@@ -108,7 +108,7 @@ public class FileScanner {
         try {
             return Files.walk(Paths.get(directory))
                     .filter(path -> path.toString().endsWith(".webm"))
-                    //.filter(path -> !webmService.isPathExist(path))
+                    .filter(path -> !contentService.isPathExist(path))
                     .collect(Collectors.toList());
         } catch (IOException e) {
             log.error("Can't find videoRepository in directory: {}", directory);

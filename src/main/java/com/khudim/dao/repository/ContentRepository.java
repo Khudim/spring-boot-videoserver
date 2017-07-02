@@ -17,4 +17,7 @@ public interface ContentRepository extends CrudRepository<Content, Long> {
 
     @Query("SELECT c.path FROM Content c WHERE c.id = :contentId")
     String getVideoPath(@Param("contentId") long contentId);
+
+    @Query("SELECT c FROM Content c WHERE c.path = :path")
+    Content getContentByPath(@Param("path") String path);
 }

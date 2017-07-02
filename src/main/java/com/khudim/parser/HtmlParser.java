@@ -8,6 +8,7 @@ import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,7 +27,7 @@ import java.util.stream.Stream;
 /**
  * Created by Beaver.
  */
-
+@Component
 public class HtmlParser {
 
     private final static Logger log = LoggerFactory.getLogger(HtmlParser.class);
@@ -47,7 +48,7 @@ public class HtmlParser {
     }
 
     private Future<Set<String>> parsePage(Integer i) {
-        String urlWithPage = "https://arhivach.org/index/viewed/monthly/" + generatePageString(i);
+        String urlWithPage = URL + generatePageString(i);
         return executor.submit(() -> parseUrlsForPage(urlWithPage));
     }
 
@@ -111,7 +112,7 @@ public class HtmlParser {
     }
 
     private String generatePageString(int numberOfPage) {
-        String pagePrefix = "";
+        String pagePrefix = "/index/";
         if (numberOfPage <= 0) {
             return pagePrefix;
         } else {
