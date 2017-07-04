@@ -8,6 +8,8 @@ import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -15,14 +17,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Collections;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.stream.IntStream;
 
 /**
  * Created by Beaver.
@@ -32,38 +29,27 @@ public class HtmlParser {
 
     private final static Logger log = LoggerFactory.getLogger(HtmlParser.class);
     private final static String URL = "https://arhivach.org";
-    private final static ExecutorService executor = Executors.newFixedThreadPool(10);
 
-    @Value("${scanner.directory}")
+    @Value("${parser.directory}")
     private String directory;
 
+    @Async
+    @Scheduled(cron = "${parser.cron}")
     public void downloadVideo() {
         log.debug("Start downloadVideo");
-        Stream.of(0, 10)
-                .map(this::parsePage)
-                .map(this::handleFuture)
+        IntStream.range(0, 10)
+                .mapToObj(this::parsePage)
                 .flatMap(Set::stream)
-                .map(url -> executor.submit(() -> downloadVideo(url)))
-                .forEach(this::waitDownload);
+                .forEach(this::downloadVideo);
     }
 
-    private Future<Set<String>> parsePage(Integer i) {
-        String urlWithPage = URL + generatePageString(i);
-        return executor.submit(() -> parseUrlsForPage(urlWithPage));
+    private Set<String> parsePage(Integer i) {
+        String pageUrl = URL + generatePageString(i);
+        return parseUrlsForPage(pageUrl);
     }
 
-    private Set<String> handleFuture(Future<Set<String>> future) {
-        Set<String> urls = Collections.emptySet();
-        try {
-            urls = future.get();
-        } catch (Exception e) {
-            log.error("Can't wait result");
-        }
-        return urls;
-    }
-
-    private Set<String> parseUrlsForPage(String url) {
-        return getConnection(url)
+    private Set<String> parseUrlsForPage(String pageUrl) {
+        return getConnection(pageUrl)
                 .addClass("thread_text")
                 .getAllElements()
                 .stream()
@@ -87,14 +73,6 @@ public class HtmlParser {
                 .map(element -> element.attr("href"))
                 .filter(src -> src.endsWith(".webm"))
                 .forEach(src -> downloadFromSrc(src, src.substring(src.lastIndexOf("/"))));
-    }
-
-    private void waitDownload(Future<?> future) {
-        try {
-            future.get(30, TimeUnit.SECONDS);
-        } catch (Exception e) {
-            log.error("Can't get video urls from thread. ", e);
-        }
     }
 
     private Document getConnection(String url) {

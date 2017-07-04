@@ -11,7 +11,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -48,43 +50,33 @@ public class MainController {
         return videoRepository.findAll(new PageRequest(page, limit)).getContent();
     }
 
-    @RequestMapping(value = "/addVideo", method = RequestMethod.GET)
-    public void addVideo() {
-        fileScanner.addVideoToBase();
-    }
-
-    @RequestMapping(value = "/downloadVideo", method = RequestMethod.GET)
-    public void startParse() {
-        htmlParser.downloadVideo();
-    }
-
     @RequestMapping(value = "/img/{contentId}", produces = MediaType.IMAGE_JPEG_VALUE)
     public byte[] getImage(@PathVariable long contentId) {
         return contentService.getImage(contentId);
     }
 
     @RequestMapping(value = "/video/{contentId}", method = RequestMethod.GET)
-    public byte[] getVideo(@PathVariable long contentId,
-                           HttpServletResponse response,
-                           @RequestHeader(required = false) String range) {
-
-        String filePath = contentService.getVideoPath(contentId);
+    public ResponseEntity<byte[]> getVideo(@PathVariable long contentId,
+                                           HttpServletResponse response,
+                                           @RequestHeader(required = false) String range) {
+        HttpStatus status;
         byte[] bytes = new byte[0];
         try {
+            String filePath = contentService.getVideoPath(contentId);
             if (StringUtils.isBlank(range)) {
                 bytes = Files.readAllBytes(Paths.get(filePath));
-                response.setStatus(200);
+                status = HttpStatus.OK;
             } else {
                 bytes = getRangeBytesFromVideo(filePath, range, response);
-                response.setStatus(206);
+                status = HttpStatus.PARTIAL_CONTENT;
             }
             response.setContentType("video/webm");
             response.setContentLength(bytes.length);
         } catch (IOException e) {
             log.error("Can't get range bytes from video, reason: ", e);
-            response.setStatus(500);
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
         }
-        return bytes;
+        return new ResponseEntity<>(bytes, status);
     }
 
 

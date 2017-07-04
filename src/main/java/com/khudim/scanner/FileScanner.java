@@ -9,6 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.stringtemplate.v4.ST;
 
@@ -49,6 +51,8 @@ public class FileScanner {
         this.videoRepository = videoRepository;
     }
 
+    @Async
+    @Scheduled(cron = "${scanner.cron}")
     public void addVideoToBase() {
         log.debug("Start add videoRepository to base");
         searchVideo().forEach(path -> {

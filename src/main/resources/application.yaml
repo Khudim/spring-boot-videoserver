@@ -1,6 +1,7 @@
 logging:
   level:
-    root: ERROR
+    com.khudim.scanner: DEBUG
+    com.khudim.parser: DEBUG
     org.springframework.web: ERROR
     org.hibernate: ERROR
 
@@ -14,6 +15,12 @@ spring:
     password: root
 
 scanner:
+   cron: '0 15 */1 * * ?'
    directory: D:\\video3
    imageEncoderCmd: ffmpeg -ss 00:00:01 -i <image> -vframes 1 -q:v 31 <file> -y
    videoSizeCmd: ffprobe -v error -show_entries stream=width,height -of default=noprint_wrappers=1 <video>
+
+parser:
+   cron: '0 45 */1 * * ?'
+   directory: ${scanner.directory}
+
