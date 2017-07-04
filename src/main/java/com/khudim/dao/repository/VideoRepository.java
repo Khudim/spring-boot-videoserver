@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
  * Created by Beaver.
  */
 @Repository
-public interface VideoRepository extends JpaRepository<Video,Long> {
+public interface VideoRepository extends JpaRepository<Video, Long> {
 
     @Override
     Page<Video> findAll(Pageable pageable);

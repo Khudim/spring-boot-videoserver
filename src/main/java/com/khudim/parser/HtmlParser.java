@@ -34,7 +34,7 @@ public class HtmlParser {
     private final static String URL = "https://arhivach.org";
     private final static ExecutorService executor = Executors.newFixedThreadPool(10);
 
-    @Value("${app.scanPath}")
+    @Value("${scanner.directory}")
     private String directory;
 
     public void downloadVideo() {
