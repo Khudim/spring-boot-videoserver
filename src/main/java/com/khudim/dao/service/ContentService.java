@@ -25,7 +25,7 @@ public class ContentService {
     }
 
     public boolean isPathExist(Path path) {
-        return contentRepository.getContentByPath(path.toString()) != null;
+        return contentRepository.findByPath(path.toString()) != null;
     }
 
     public void save(Content content) {
@@ -33,14 +33,14 @@ public class ContentService {
     }
 
     public String getVideoPath(long contentId) throws NoSuchFileException {
-        String path = contentRepository.getVideoPath(contentId);
+        String path = contentRepository.findPathById(contentId);
         if (StringUtils.isBlank(path) || !Files.exists(Paths.get(path))) {
             throw new NoSuchFileException("No such file " + path);
         }
-        return contentRepository.getVideoPath(contentId);
+        return contentRepository.findPathById(contentId);
     }
 
     public byte[] getImage(long contentId) {
-        return contentRepository.getImage(contentId);
+        return contentRepository.findImageById(contentId);
     }
 }

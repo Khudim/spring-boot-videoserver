@@ -12,6 +12,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.stringtemplate.v4.ST;
 
 import java.io.BufferedReader;
@@ -55,25 +56,36 @@ public class FileScanner {
     @Scheduled(cron = "${scanner.cron}")
     public void addVideoToBase() {
         log.debug("Start add videoRepository to base");
-        searchVideo().forEach(path -> {
-            Content content = new Content();
-            content.setPath(path.toString());
-            content.setImage(getImageFromVideo(path));
-            contentService.save(content);
-
-            int[] videoSize = findVideoSize(path.toString());
-
-            Video video = new Video();
-            video.setContentId(content.getId());
-            video.setDate(System.currentTimeMillis());
-            video.setWidth(videoSize[0]);
-            video.setHeight(videoSize[1]);
-            video.setName(path.getFileName().toString());
-            videoRepository.save(video);
-        });
+        searchVideo().forEach(this::prepareContent);
     }
 
-    private byte[] getImageFromVideo(Path path) {
+    private void prepareContent(Path path) {
+        try {
+            addContentToBase(path);
+        } catch (Exception e) {
+            log.error("Can't prepare content " + path, e);
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    private void addContentToBase(Path path) throws Exception {
+        Content content = new Content();
+        content.setPath(path.toString());
+        content.setImage(getImageFromVideo(path));
+        contentService.save(content);
+
+        int[] videoSize = findVideoSize(path.toString());
+
+        Video video = new Video();
+        video.setContentId(content.getId());
+        video.setDate(System.currentTimeMillis());
+        video.setWidth(videoSize[0]);
+        video.setHeight(videoSize[1]);
+        video.setName(path.getFileName().toString());
+        videoRepository.save(video);
+    }
+
+    private byte[] getImageFromVideo(Path path) throws IOException, InterruptedException {
         Path tempFile = null;
         Process process = null;
         ST template = new ST(imageEncoderCmd);
@@ -82,17 +94,14 @@ public class FileScanner {
             template.add("image", path);
             template.add("file", tempFile);
             process = new ProcessBuilder(template.render().split(" ")).start();
-            process.waitFor(20, TimeUnit.SECONDS);
+            process.waitFor(40, TimeUnit.SECONDS);
             return Files.readAllBytes(tempFile);
-        } catch (IOException | InterruptedException e) {
-            log.error("Can't get image from file: {}, reason: {}", path, e);
         } finally {
             if (process != null) {
                 process.destroy();
             }
             deleteFile(tempFile);
         }
-        return new byte[0];
     }
 
     private void deleteFile(Path tempFile) {
@@ -120,11 +129,11 @@ public class FileScanner {
         return path.toString().endsWith(".webm") && !contentService.isPathExist(path);
     }
 
-    private int[] findVideoSize(String videoPath) {
+    private int[] findVideoSize(String videoPath) throws Exception {
         ST template = new ST(videoSizeCmd);
         template.add("video", videoPath);
-        int width = 0;
-        int height = 0;
+        int width;
+        int height;
         Process pb = null;
         try {
             pb = new ProcessBuilder(template.render().split(" ")).start();
@@ -133,9 +142,6 @@ public class FileScanner {
             width = toInt(output[0].split("=")[1]);
             height = toInt(output[1].split("=")[1]);
             log.debug("width: {}, height: {}", width, height);
-        } catch (Exception e) {
-            System.out.println(e);
-            log.error("Can't find videoRepository size file: {}, reason: {}", videoPath, e);
         } finally {
             if (pb != null) {
                 pb.destroy();

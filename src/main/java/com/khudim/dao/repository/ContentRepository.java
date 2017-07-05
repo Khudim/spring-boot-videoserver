@@ -13,11 +13,10 @@ import org.springframework.stereotype.Repository;
 public interface ContentRepository extends CrudRepository<Content, Long> {
 
     @Query("SELECT c.image FROM Content c WHERE c.id = :contentId")
-    byte[] getImage(@Param("contentId") long contentId);
+    byte[] findImageById(@Param("contentId") long contentId);
 
     @Query("SELECT c.path FROM Content c WHERE c.id = :contentId")
-    String getVideoPath(@Param("contentId") long contentId);
+    String findPathById(@Param("contentId") long contentId);
 
-    @Query("SELECT c FROM Content c WHERE c.path = :path")
-    Content getContentByPath(@Param("path") String path);
+    Content findByPath(String path);
 }
