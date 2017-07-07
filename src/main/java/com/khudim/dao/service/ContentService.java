@@ -5,6 +5,7 @@ import com.khudim.dao.repository.ContentRepository;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -15,6 +16,7 @@ import java.nio.file.Paths;
  * Created by Beaver.
  */
 @Service
+@Transactional
 public class ContentService {
 
     private final ContentRepository contentRepository;

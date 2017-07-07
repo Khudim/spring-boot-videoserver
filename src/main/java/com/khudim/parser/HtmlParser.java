@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -38,26 +40,24 @@ public class HtmlParser {
     public void downloadVideo() {
         log.debug("Start downloadVideo");
         IntStream.range(0, 10)
-                .mapToObj(this::parsePage)
+                .mapToObj(i -> parseUrlsForPage(URL + generatePageString(i)))
                 .flatMap(Set::stream)
                 .forEach(this::downloadVideo);
     }
 
-    private Set<String> parsePage(Integer i) {
-        String pageUrl = URL + generatePageString(i);
-        return parseUrlsForPage(pageUrl);
-    }
-
     private Set<String> parseUrlsForPage(String pageUrl) {
-        return getConnection(pageUrl)
-                .addClass("thread_text")
-                .getAllElements()
-                .stream()
-                .filter(this::checkElement)
-                .map(element -> element.attr("href"))
-                .filter(StringUtils::isNotBlank)
-                .map(href -> URL + href)
-                .collect(Collectors.toSet());
+        Set<String> urls = Collections.emptySet();
+        getDocument(pageUrl)
+                .ifPresent(document -> urls.addAll(document
+                        .addClass("thread_text")
+                        .getAllElements()
+                        .stream()
+                        .filter(this::checkElement)
+                        .map(element -> element.attr("href"))
+                        .filter(StringUtils::isNotBlank)
+                        .map(href -> URL + href)
+                        .collect(Collectors.toSet())));
+        return urls;
     }
 
     private boolean checkElement(Element element) {
@@ -66,27 +66,24 @@ public class HtmlParser {
     }
 
     private void downloadVideo(String url) {
-        getConnection(url)
-                .addClass("img_filename")
-                .getAllElements()
-                .stream()
-                .map(element -> element.attr("href"))
-                .filter(src -> src.endsWith(".webm"))
-                .forEach(src -> downloadFromSrc(src, src.substring(src.lastIndexOf("/"))));
+        getDocument(url)
+                .ifPresent(document -> document.addClass("img_filename")
+                        .getAllElements()
+                        .stream()
+                        .map(element -> element.attr("href"))
+                        .filter(src -> src.endsWith(".webm"))
+                        .forEach(src -> downloadFromSrc(src, src.substring(src.lastIndexOf("/")))));
     }
 
-    private Document getConnection(String url) {
-        Document doc;
+    private Optional<Document> getDocument(String url) {
         try {
-            doc = Jsoup.connect(url)
+            return Optional.ofNullable(Jsoup.connect(url)
                     .userAgent("NING/1.0")
-                    .get();
+                    .get());
         } catch (IOException e) {
-            log.warn("Can't get connection, reason: ", e);
-            waitMeSecond();
-            doc = getConnection(url);
+            log.warn("Can't get document, reason: ", e);
+            return Optional.empty();
         }
-        return doc;
     }
 
     private String generatePageString(int numberOfPage) {
@@ -110,15 +107,6 @@ public class HtmlParser {
             log.error("Can't download from url: {}", url);
         }
     }
-
-    private void waitMeSecond() {
-        try {
-            Thread.sleep(1000L);
-        } catch (InterruptedException e) {
-            log.error("Can't wait. {}", e.getMessage());
-        }
-    }
-
 }
 
 

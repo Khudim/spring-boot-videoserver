@@ -41,7 +41,5 @@ public class ContentRepositoryTest {
         this.entityManager.persist(expectedContent);
         String testContent = contentRepository.findPathById(1);
         Assert.assertNotNull(testContent);
-
     }
-
 }

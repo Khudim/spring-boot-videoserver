@@ -83,6 +83,7 @@ public class FileScanner {
         video.setHeight(videoSize[1]);
         video.setName(path.getFileName().toString());
         videoRepository.save(video);
+        throw new Exception("");
     }
 
     private byte[] getImageFromVideo(Path path) throws IOException, InterruptedException {
