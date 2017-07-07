@@ -12,7 +12,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import org.stringtemplate.v4.ST;
 
 import java.io.BufferedReader;
@@ -67,7 +66,6 @@ public class FileScanner {
         }
     }
 
-    @Transactional(rollbackFor = Exception.class)
     private void addContentToBase(Path path) throws Exception {
         Content content = new Content();
         content.setPath(path.toString());
@@ -83,7 +81,7 @@ public class FileScanner {
         video.setHeight(videoSize[1]);
         video.setName(path.getFileName().toString());
         videoRepository.save(video);
-        throw new Exception("");
+        throw new RuntimeException();
     }
 
     private byte[] getImageFromVideo(Path path) throws IOException, InterruptedException {

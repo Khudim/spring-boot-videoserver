@@ -61,8 +61,10 @@ public class HtmlParser {
     }
 
     private boolean checkElement(Element element) {
-        return element.text().toLowerCase().contains("webm")
-                || element.text().toLowerCase().contains("цуиь");
+        return (element.text().toLowerCase().contains("webm")
+                || element.text().toLowerCase().contains("цуиь"))
+                && (element.text().toLowerCase().contains("music")
+                || element.text().toLowerCase().contains("музыкальный"));
     }
 
     private void downloadVideo(String url) {

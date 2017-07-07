@@ -18,5 +18,5 @@ public interface ContentRepository extends CrudRepository<Content, Long> {
     @Query("SELECT c.path FROM Content c WHERE c.id = :contentId")
     String findPathById(@Param("contentId") long contentId);
 
-    Content findByPath(String path);
+    Long countByPath(String path);
 }

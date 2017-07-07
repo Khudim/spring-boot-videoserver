@@ -29,8 +29,8 @@ public class ContentRepositoryTest {
         Content expectedContent = new Content();
         expectedContent.setPath(path);
         this.entityManager.persist(expectedContent);
-        Content testContent = contentRepository.findByPath(path);
-        Assert.assertNotNull(testContent);
+        Long count = contentRepository.countByPath(path);
+        Assert.assertTrue(count > 0);
     }
 
     @Test
