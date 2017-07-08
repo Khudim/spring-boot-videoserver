@@ -9,9 +9,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.stringtemplate.v4.ST;
 
 import java.io.BufferedReader;
@@ -34,6 +34,7 @@ import static org.apache.commons.lang.math.NumberUtils.toInt;
 @Component
 @Data
 @ConfigurationProperties(prefix = "scanner")
+@Transactional(rollbackFor = Exception.class)
 public class FileScanner {
 
     private static Logger log = LoggerFactory.getLogger(FileScanner.class);
@@ -51,7 +52,6 @@ public class FileScanner {
         this.videoRepository = videoRepository;
     }
 
-    @Async
     @Scheduled(cron = "${scanner.cron}")
     public void addVideoToBase() {
         log.debug("Start add videoRepository to base");
@@ -81,7 +81,6 @@ public class FileScanner {
         video.setHeight(videoSize[1]);
         video.setName(path.getFileName().toString());
         videoRepository.save(video);
-        throw new RuntimeException();
     }
 
     private byte[] getImageFromVideo(Path path) throws IOException, InterruptedException {

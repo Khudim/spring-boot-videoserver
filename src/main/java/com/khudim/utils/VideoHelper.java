@@ -14,7 +14,6 @@ public class VideoHelper {
     private final static int MB = 1024 * 1024;
 
     public static byte[] getRangeBytesFromVideo(String filePath, String range, HttpServletResponse response) throws IOException {
-
         File file = new File(filePath);
         long fileLength = file.length();
 
@@ -25,9 +24,7 @@ public class VideoHelper {
         response.setHeader("Accept-Ranges", "bytes");
         response.setHeader("Content-Range", "bytes " + start + "-" + stop + "/" + fileLength);
 
-
         byte[] bytes = new byte[stop - start + 1];
-
         try (RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw")) {
             randomAccessFile.seek(start);
             randomAccessFile.readFully(bytes, 0, stop - start);

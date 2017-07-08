@@ -8,7 +8,6 @@ import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -35,7 +34,6 @@ public class HtmlParser {
     @Value("${parser.directory}")
     private String directory;
 
-    @Async
     @Scheduled(cron = "${parser.cron}")
     public void downloadVideo() {
         log.debug("Start downloadVideo");
