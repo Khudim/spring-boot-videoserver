@@ -14,4 +14,6 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
 
     @Override
     Page<Video> findAll(Pageable pageable);
+
+    Long countByName(String name);
 }

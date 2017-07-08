@@ -1,5 +1,6 @@
 package com.khudim.parser;
 
+import com.khudim.dao.service.VideoService;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jsoup.Jsoup;
@@ -7,6 +8,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -16,7 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -31,8 +33,15 @@ public class HtmlParser {
     private final static Logger log = LoggerFactory.getLogger(HtmlParser.class);
     private final static String URL = "https://arhivach.org";
 
+    private final VideoService videoService;
+
     @Value("${parser.directory}")
     private String directory;
+
+    @Autowired
+    public HtmlParser(VideoService videoService) {
+        this.videoService = videoService;
+    }
 
     @Scheduled(cron = "${parser.cron}")
     public void downloadVideo() {
@@ -41,10 +50,11 @@ public class HtmlParser {
                 .mapToObj(i -> parseUrlsForPage(URL + generatePageString(i)))
                 .flatMap(Set::stream)
                 .forEach(this::downloadVideo);
+        log.debug("Stop downloadVideo");
     }
 
     private Set<String> parseUrlsForPage(String pageUrl) {
-        Set<String> urls = Collections.emptySet();
+        Set<String> urls = new HashSet<>();
         getDocument(pageUrl)
                 .ifPresent(document -> urls.addAll(document
                         .addClass("thread_text")
@@ -71,8 +81,16 @@ public class HtmlParser {
                         .getAllElements()
                         .stream()
                         .map(element -> element.attr("href"))
-                        .filter(src -> src.endsWith(".webm"))
-                        .forEach(src -> downloadFromSrc(src, src.substring(src.lastIndexOf("/")))));
+                        .filter(this::checkFile)
+                        .forEach(src -> downloadFromSrc(src, getFileNameFromUrl(src))));
+    }
+
+    private boolean checkFile(String src) {
+        return src.endsWith(".webm") && !videoService.isRepeated(getFileNameFromUrl(src));
+    }
+
+    private String getFileNameFromUrl(String src) {
+        return src.substring(src.lastIndexOf("/"));
     }
 
     private Optional<Document> getDocument(String url) {

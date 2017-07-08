@@ -54,8 +54,9 @@ public class FileScanner {
 
     @Scheduled(cron = "${scanner.cron}")
     public void addVideoToBase() {
-        log.debug("Start add videoRepository to base");
+        log.debug("Start add video to base");
         searchVideo().forEach(this::prepareContent);
+        log.debug("Stop add video to base ");
     }
 
     private void prepareContent(Path path) {
