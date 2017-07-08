@@ -11,8 +11,6 @@ import java.io.RandomAccessFile;
  */
 public class VideoHelper {
 
-    private final static int MB = 1024 * 1024;
-
     public static byte[] getRangeBytesFromVideo(String filePath, String range, HttpServletResponse response) throws IOException {
         File file = new File(filePath);
         long fileLength = file.length();
@@ -42,14 +40,10 @@ public class VideoHelper {
             ranges = new String[]{start, stop};
         }
 
-        long start = Long.parseLong(ranges[0]);
         long stop = Long.parseLong(ranges[1]);
 
-        if (stop - start > MB) {
-            stop = start + MB;
-            if (stop > fileLength) {
-                stop = fileLength - 1;
-            }
+        if (stop > fileLength) {
+            stop = fileLength - 1;
             ranges[1] = String.valueOf(stop);
         }
 

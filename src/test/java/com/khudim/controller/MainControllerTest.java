@@ -39,11 +39,4 @@ public class MainControllerTest {
                 .andExpect(forwardedUrl("index.html"));
     }
 
-    @Test
-    public void getMessage() throws Exception {
-        this.mockMvc.perform(get("/msg"))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(content().string("Hello there"));
-    }
 }

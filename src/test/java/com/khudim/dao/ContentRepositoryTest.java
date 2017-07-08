@@ -39,7 +39,7 @@ public class ContentRepositoryTest {
         Content expectedContent = new Content();
         expectedContent.setPath(path);
         this.entityManager.persist(expectedContent);
-        String testContent = contentRepository.findPathById(1);
+        String testContent = contentRepository.findPathById(expectedContent.getId());
         Assert.assertNotNull(testContent);
     }
 }
