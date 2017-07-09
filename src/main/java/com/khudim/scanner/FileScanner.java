@@ -2,121 +2,76 @@ package com.khudim.scanner;
 
 import com.khudim.dao.entity.Content;
 import com.khudim.dao.entity.Video;
-import com.khudim.dao.repository.VideoRepository;
 import com.khudim.dao.service.ContentService;
+import com.khudim.dao.service.VideoService;
+import com.khudim.utils.VideoHelper;
 import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.stringtemplate.v4.ST;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
-import static org.apache.commons.lang.math.NumberUtils.toInt;
 
 /**
  * Created by Beaver.
  */
 @Component
 @Data
-@ConfigurationProperties(prefix = "scanner")
-@Transactional(rollbackFor = Exception.class)
 public class FileScanner {
 
     private static Logger log = LoggerFactory.getLogger(FileScanner.class);
 
     private final ContentService contentService;
-    private final VideoRepository videoRepository;
+    private final VideoService videoService;
+    private final VideoHelper videoHelper;
 
+    @Value("${scanner.directory}")
     private String directory;
-    private String imageEncoderCmd;
-    private String videoSizeCmd;
 
     @Autowired
-    public FileScanner(ContentService contentService, VideoRepository videoRepository) {
+    public FileScanner(ContentService contentService, VideoService videoService, VideoHelper videoHelper) {
         this.contentService = contentService;
-        this.videoRepository = videoRepository;
+        this.videoService = videoService;
+        this.videoHelper = videoHelper;
     }
 
     @Scheduled(cron = "${scanner.cron}")
     public void addVideoToBase() {
-        log.debug("Start add video to base");
-        searchVideo().forEach(this::prepareContent);
-        log.debug("Stop add video to base ");
+        log.debug("Start add video to base from directory: {}", directory);
+        searchVideo().forEach(this::addContentToBase);
+        log.debug("Stop file scanner.");
     }
 
-    private void prepareContent(Path path) {
+    @Transactional(rollbackFor = Exception.class)
+    private void addContentToBase(Path path) {
         try {
-            addContentToBase(path);
+            byte[] image = videoHelper.getImageFromVideo(path);
+            int[] videoSize = videoHelper.getVideoSize(path);
+
+            Content content = new Content();
+            content.setPath(path.toString());
+            content.setImage(image);
+            contentService.save(content);
+
+            Video video = new Video();
+            video.setContentId(content.getId());
+            video.setDate(System.currentTimeMillis());
+            video.setWidth(videoSize[0]);
+            video.setHeight(videoSize[1]);
+            video.setName(path.getFileName().toString());
+            videoService.save(video);
         } catch (Exception e) {
+            //videoHelper.deleteFile(path);
             log.error("Can't prepare content " + path, e);
-        }
-    }
-
-    private void addContentToBase(Path path) throws Exception {
-        Content content = new Content();
-        content.setPath(path.toString());
-        content.setImage(getImageFromVideo(path));
-        contentService.save(content);
-
-        int[] videoSize = findVideoSize(createCmd(path).render());
-
-        Video video = new Video();
-        video.setContentId(content.getId());
-        video.setDate(System.currentTimeMillis());
-        video.setWidth(videoSize[0]);
-        video.setHeight(videoSize[1]);
-        video.setName(path.getFileName().toString());
-        videoRepository.save(video);
-    }
-
-    private ST createCmd(Path path) {
-        ST template = new ST(videoSizeCmd);
-        template.add("video", path.toString());
-        template.render();
-        return template;
-    }
-
-    private byte[] getImageFromVideo(Path path) throws IOException, InterruptedException {
-        Path tempFile = null;
-        Process process = null;
-        ST template = new ST(imageEncoderCmd);
-        try {
-            tempFile = Files.createTempFile("temp", ".jpg");
-            template.add("image", path);
-            template.add("file", tempFile);
-            process = new ProcessBuilder(template.render().split(" ")).start();
-            process.waitFor(40, TimeUnit.SECONDS);
-            return Files.readAllBytes(tempFile);
-        } finally {
-            if (process != null) {
-                process.destroy();
-            }
-            deleteFile(tempFile);
-        }
-    }
-
-    private void deleteFile(Path tempFile) {
-        try {
-            if (tempFile != null) {
-                Files.delete(tempFile);
-            }
-        } catch (IOException e) {
-            log.error("Can't delete file: {}", e);
         }
     }
 
@@ -125,7 +80,7 @@ public class FileScanner {
             return Files.walk(Paths.get(directory))
                     .filter(this::isRightPath)
                     .collect(Collectors.toList());
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("Can't find videoRepository in directory: {}", directory);
         }
         return Collections.emptyList();
@@ -133,30 +88,5 @@ public class FileScanner {
 
     private boolean isRightPath(Path path) {
         return path.toString().endsWith(".webm") && !contentService.isPathExist(path);
-    }
-
-    private int[] findVideoSize(String cmd) throws Exception {
-        int width;
-        int height;
-        Process pb = null;
-        try {
-            pb = new ProcessBuilder(cmd.split(" ")).start();
-            pb.waitFor();
-            String[] output = output(pb.getInputStream());
-            width = toInt(output[0].split("=")[1]);
-            height = toInt(output[1].split("=")[1]);
-            log.debug("width: {}, height: {}", width, height);
-        } finally {
-            if (pb != null) {
-                pb.destroy();
-            }
-        }
-        return new int[]{width, height};
-    }
-
-    private String[] output(InputStream inputStream) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-            return reader.lines().toArray(String[]::new);
-        }
     }
 }

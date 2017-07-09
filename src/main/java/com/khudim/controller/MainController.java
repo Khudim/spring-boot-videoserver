@@ -3,6 +3,9 @@ package com.khudim.controller;
 import com.khudim.dao.entity.Video;
 import com.khudim.dao.repository.VideoRepository;
 import com.khudim.dao.service.ContentService;
+import com.khudim.parser.HtmlParser;
+import com.khudim.scanner.FileScanner;
+import com.khudim.utils.VideoHelper;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,8 +23,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
-import static com.khudim.utils.VideoHelper.getRangeBytesFromVideo;
-
 /**
  * Created by Beaver.
  */
@@ -31,11 +32,21 @@ public class MainController {
     private static Logger log = LoggerFactory.getLogger(MainController.class);
     private final ContentService contentService;
     private final VideoRepository videoRepository;
+    private final FileScanner fileScanner;
+
+    private final VideoHelper videoHelper;
 
     @Autowired
-    public MainController(ContentService contentService, VideoRepository videoRepository) {
+    public MainController(ContentService contentService, VideoRepository videoRepository, FileScanner fileScanner, HtmlParser htmlParser, VideoHelper videoHelper) {
         this.contentService = contentService;
         this.videoRepository = videoRepository;
+        this.fileScanner = fileScanner;
+        this.videoHelper = videoHelper;
+    }
+
+    @RequestMapping(value = "/test")
+    public void getImage() {
+        fileScanner.addVideoToBase();
     }
 
     @RequestMapping(value = "/video", method = RequestMethod.GET)
@@ -61,7 +72,7 @@ public class MainController {
                 bytes = Files.readAllBytes(Paths.get(filePath));
                 status = HttpStatus.OK;
             } else {
-                bytes = getRangeBytesFromVideo(filePath, range, response);
+                bytes = videoHelper.getRangeBytesFromVideo(filePath, range, response);
                 status = HttpStatus.PARTIAL_CONTENT;
             }
             response.setContentType("video/webm");
