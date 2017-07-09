@@ -3,8 +3,6 @@ package com.khudim.controller;
 import com.khudim.dao.entity.Video;
 import com.khudim.dao.repository.VideoRepository;
 import com.khudim.dao.service.ContentService;
-import com.khudim.parser.HtmlParser;
-import com.khudim.scanner.FileScanner;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,15 +31,11 @@ public class MainController {
     private static Logger log = LoggerFactory.getLogger(MainController.class);
     private final ContentService contentService;
     private final VideoRepository videoRepository;
-    private final FileScanner fileScanner;
-    private final HtmlParser htmlParser;
 
     @Autowired
-    public MainController(ContentService contentService, VideoRepository videoRepository, FileScanner fileScanner, HtmlParser htmlParser) {
+    public MainController(ContentService contentService, VideoRepository videoRepository) {
         this.contentService = contentService;
         this.videoRepository = videoRepository;
-        this.fileScanner = fileScanner;
-        this.htmlParser = htmlParser;
     }
 
     @RequestMapping(value = "/video", method = RequestMethod.GET)

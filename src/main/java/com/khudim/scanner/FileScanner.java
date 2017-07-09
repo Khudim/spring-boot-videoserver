@@ -73,7 +73,7 @@ public class FileScanner {
         content.setImage(getImageFromVideo(path));
         contentService.save(content);
 
-        int[] videoSize = findVideoSize(path.toString());
+        int[] videoSize = findVideoSize(createCmd(path).render());
 
         Video video = new Video();
         video.setContentId(content.getId());
@@ -82,6 +82,13 @@ public class FileScanner {
         video.setHeight(videoSize[1]);
         video.setName(path.getFileName().toString());
         videoRepository.save(video);
+    }
+
+    private ST createCmd(Path path) {
+        ST template = new ST(videoSizeCmd);
+        template.add("video", path.toString());
+        template.render();
+        return template;
     }
 
     private byte[] getImageFromVideo(Path path) throws IOException, InterruptedException {
@@ -128,14 +135,12 @@ public class FileScanner {
         return path.toString().endsWith(".webm") && !contentService.isPathExist(path);
     }
 
-    private int[] findVideoSize(String videoPath) throws Exception {
-        ST template = new ST(videoSizeCmd);
-        template.add("video", videoPath);
+    private int[] findVideoSize(String cmd) throws Exception {
         int width;
         int height;
         Process pb = null;
         try {
-            pb = new ProcessBuilder(template.render().split(" ")).start();
+            pb = new ProcessBuilder(cmd.split(" ")).start();
             pb.waitFor();
             String[] output = output(pb.getInputStream());
             width = toInt(output[0].split("=")[1]);
