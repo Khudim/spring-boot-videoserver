@@ -77,7 +77,7 @@ public class VideoHelper {
                     .render()
                     .split(" "))
                     .start();
-            pb.waitFor();
+            pb.waitFor(10, TimeUnit.SECONDS);
 
             String[] output = output(pb.getInputStream());
             if (output.length != 2) {
@@ -109,10 +109,11 @@ public class VideoHelper {
             template.add("file", tempFile);
 
             process = new ProcessBuilder(template.render().split(" ")).start();
-            process.waitFor(40, TimeUnit.SECONDS);
+            process.waitFor(20, TimeUnit.SECONDS);
 
             if (tempFile.toFile().length() == 0) {
-                throw new IOException("Can't get image from video with command: " + imageEncoderCmd);
+                log.debug("Can't get image from file " + path.getFileName());
+                return new byte[0];
             }
             return Files.readAllBytes(tempFile);
         } finally {
