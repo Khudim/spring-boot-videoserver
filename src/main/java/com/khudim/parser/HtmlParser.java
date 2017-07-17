@@ -22,7 +22,8 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+
+import static java.util.stream.IntStream.range;
 
 /**
  * Created by Beaver.
@@ -46,7 +47,7 @@ public class HtmlParser {
     @Scheduled(cron = "${parser.cron}")
     public void downloadVideo() {
         log.debug("Start downloadVideo");
-        IntStream.range(0, 10)
+        range(0, 30)
                 .mapToObj(i -> parseUrlsForPage(URL + generatePageString(i)))
                 .flatMap(Set::stream)
                 .forEach(this::downloadVideo);
@@ -56,15 +57,19 @@ public class HtmlParser {
     private Set<String> parseUrlsForPage(String pageUrl) {
         Set<String> urls = new HashSet<>();
         getDocument(pageUrl)
-                .ifPresent(document -> urls.addAll(document
-                        .addClass("thread_text")
-                        .getAllElements()
-                        .stream()
-                        .filter(this::checkElement)
-                        .map(element -> element.attr("href"))
-                        .filter(StringUtils::isNotBlank)
-                        .map(href -> URL + href)
-                        .collect(Collectors.toSet())));
+                .ifPresent(document -> {
+                            urls.addAll(document
+                                    .addClass("thread_text")
+                                    .getAllElements()
+                                    .stream()
+                                    .filter(this::checkElement)
+                                    .map(element -> element.attr("href"))
+                                    .filter(StringUtils::isNotBlank)
+                                    .map(href -> URL + href)
+                                    .collect(Collectors.toSet()));
+                            log.debug("urls size = " + urls.size());
+                        }
+                );
         return urls;
     }
 
@@ -72,7 +77,7 @@ public class HtmlParser {
         return (element.text().toLowerCase().contains("webm")
                 || element.text().toLowerCase().contains("цуиь"))
                 && (element.text().toLowerCase().contains("music")
-                || element.text().toLowerCase().contains("музыкальный"));
+                || element.text().toLowerCase().contains("музыка"));
     }
 
     private void downloadVideo(String url) {

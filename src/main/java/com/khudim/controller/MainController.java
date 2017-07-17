@@ -1,16 +1,15 @@
 package com.khudim.controller;
 
 import com.khudim.dao.entity.Video;
-import com.khudim.dao.repository.VideoRepository;
 import com.khudim.dao.service.ContentService;
+import com.khudim.dao.service.VideoService;
 import com.khudim.parser.HtmlParser;
-import com.khudim.scanner.FileScanner;
 import com.khudim.utils.VideoHelper;
+import lombok.Data;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -31,28 +30,30 @@ public class MainController {
 
     private static Logger log = LoggerFactory.getLogger(MainController.class);
     private final ContentService contentService;
-    private final VideoRepository videoRepository;
-    private final FileScanner fileScanner;
-
+    private final VideoService videoService;
     private final VideoHelper videoHelper;
 
     @Autowired
-    public MainController(ContentService contentService, VideoRepository videoRepository, FileScanner fileScanner, HtmlParser htmlParser, VideoHelper videoHelper) {
+    private HtmlParser parser;
+
+    @Autowired
+    public MainController(ContentService contentService, VideoService videoService, VideoHelper videoHelper) {
         this.contentService = contentService;
-        this.videoRepository = videoRepository;
-        this.fileScanner = fileScanner;
+        this.videoService = videoService;
         this.videoHelper = videoHelper;
     }
 
-    @RequestMapping(value = "/test")
-    public void getImage() {
-        fileScanner.addVideoToBase();
+    @RequestMapping(value = "/test", method = RequestMethod.GET)
+    public void test() {
+        parser.downloadVideo();
     }
 
     @RequestMapping(value = "/video", method = RequestMethod.GET)
-    public List<Video> getVideo(@RequestParam int page, @RequestParam int limit, HttpServletResponse response) {
+    public ResponseContent getVideo(@RequestParam int page, @RequestParam int limit, HttpServletResponse response) {
         response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
-        return videoRepository.findAll(new PageRequest(page, limit)).getContent();
+        long count = videoService.getCount();
+        List<Video> videos = videoService.findAll(page, limit);
+        return new ResponseContent(count, videos);
     }
 
     @RequestMapping(value = "/img/{contentId}", produces = MediaType.IMAGE_JPEG_VALUE)
@@ -84,5 +85,14 @@ public class MainController {
         return new ResponseEntity<>(bytes, status);
     }
 
+    @Data
+    public class ResponseContent {
+        private long count;
+        private List<?> content;
 
+        ResponseContent(long count, List<?> content) {
+            this.count = count;
+            this.content = content;
+        }
+    }
 }
