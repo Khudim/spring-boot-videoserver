@@ -32,15 +32,14 @@ public class MainController {
     private final ContentService contentService;
     private final VideoService videoService;
     private final VideoHelper videoHelper;
+    private final HtmlParser parser;
 
     @Autowired
-    private HtmlParser parser;
-
-    @Autowired
-    public MainController(ContentService contentService, VideoService videoService, VideoHelper videoHelper) {
+    public MainController(ContentService contentService, VideoService videoService, VideoHelper videoHelper, HtmlParser parser) {
         this.contentService = contentService;
         this.videoService = videoService;
         this.videoHelper = videoHelper;
+        this.parser = parser;
     }
 
     @RequestMapping(value = "/test", method = RequestMethod.GET)

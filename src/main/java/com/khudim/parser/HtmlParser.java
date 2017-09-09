@@ -56,7 +56,7 @@ public class HtmlParser {
 
     private Set<String> parseUrlsForPage(String pageUrl) {
         Set<String> urls = new HashSet<>();
-        getDocument(pageUrl)
+        getDocument(pageUrl,0)
                 .ifPresent(document -> {
                             urls.addAll(document
                                     .addClass("thread_text")
@@ -81,7 +81,7 @@ public class HtmlParser {
     }
 
     private void downloadVideo(String url) {
-        getDocument(url)
+        getDocument(url, 0)
                 .ifPresent(document -> document.addClass("img_filename")
                         .getAllElements()
                         .stream()
@@ -98,14 +98,27 @@ public class HtmlParser {
         return src.substring(src.lastIndexOf("/"));
     }
 
-    private Optional<Document> getDocument(String url) {
+    private Optional<Document> getDocument(String url, int count) {
         try {
             return Optional.ofNullable(Jsoup.connect(url)
                     .userAgent("NING/1.0")
                     .get());
         } catch (IOException e) {
-            log.warn("Can't get document, reason: ", e);
-            return Optional.empty();
+            log.warn("Can't get document, reason: ", e.getMessage());
+            if(count < 5) {
+                sleep();
+                return getDocument(url, ++count);
+            }else {
+                return Optional.empty();
+            }
+        }
+    }
+
+    private void sleep() {
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e1) {
+            e1.printStackTrace();
         }
     }
 
