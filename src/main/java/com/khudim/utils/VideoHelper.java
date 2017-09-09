@@ -3,6 +3,7 @@ package com.khudim.utils;
 import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.stringtemplate.v4.ST;
@@ -11,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
 
 import static org.apache.commons.lang.math.NumberUtils.toInt;
@@ -28,6 +30,9 @@ public class VideoHelper {
 
     private String imageEncoderCmd = "ffmpeg -ss 00:00:01 -i <image> -vframes 1 -q:v 31 <file> -y";
     private String videoSizeCmd = "ffprobe -v error -show_entries stream=width,height -of default=noprint_wrappers=1 <video>";
+
+    @Value("${scanner.tmpDir}")
+    private String tmpDir = "/tmp";
 
     public byte[] getRangeBytesFromVideo(String filePath, String range, HttpServletResponse response) throws IOException {
         File file = new File(filePath);
@@ -80,7 +85,7 @@ public class VideoHelper {
             pb.waitFor(10, TimeUnit.SECONDS);
 
             String[] output = output(pb.getInputStream());
-            if (output.length != 2) {
+            if (output.length < 2) {
                 throw new IOException("Can't get video parameters with command: " + videoSizeCmd);
             }
             width = toInt(output[0].split("=")[1]);
@@ -99,28 +104,32 @@ public class VideoHelper {
         }
     }
 
-    public byte[] getImageFromVideo(Path path) throws IOException, InterruptedException {
-        Path tempFile = null;
+    public byte[] getImageFromVideo(Path path) {
+        File tempFile = null;
         Process process = null;
         ST template = new ST(imageEncoderCmd);
         try {
-            tempFile = Files.createTempFile("temp", ".jpg");
+            tempFile = Files.createTempFile("temp", ".jpg").toFile();
             template.add("image", path);
             template.add("file", tempFile);
-
-            process = new ProcessBuilder(template.render().split(" ")).start();
+            ProcessBuilder pb = new ProcessBuilder(template.render().split(" "));
+            process = pb.start();
             process.waitFor(20, TimeUnit.SECONDS);
 
-            if (tempFile.toFile().length() == 0) {
+            if (tempFile.length() == 0) {
                 log.debug("Can't get image from file " + path.getFileName());
                 return new byte[0];
             }
-            return Files.readAllBytes(tempFile);
+            return Files.readAllBytes(tempFile.toPath());
+        } catch (Exception e) {
+            return new byte[0];
         } finally {
             if (process != null) {
                 process.destroy();
             }
-            deleteFile(tempFile);
+            if (tempFile != null) {
+                deleteFile(tempFile.toPath());
+            }
         }
     }
 

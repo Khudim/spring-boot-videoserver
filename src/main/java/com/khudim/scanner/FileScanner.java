@@ -87,6 +87,6 @@ public class FileScanner {
     }
 
     private boolean isRightPath(Path path) {
-        return Files.isDirectory(path) || path.toString().endsWith(".webm") && !contentService.isPathExist(path);
+        return path.toString().endsWith(".webm") && !contentService.isPathExist(path);
     }
 }

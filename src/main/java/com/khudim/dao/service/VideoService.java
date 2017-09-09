@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -33,7 +34,11 @@ public class VideoService {
     }
 
     public List<Video> findAll(int page, int limit) {
-        return videoRepository.findAll(new PageRequest(page, limit)).getContent();
+        List<Video> videos = videoRepository.findAll(new PageRequest(page, limit)).getContent();
+        if (videos == null) {
+            videos = Collections.emptyList();
+        }
+        return videos;
     }
 
     public long getCount() {
