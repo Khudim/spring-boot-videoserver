@@ -18,7 +18,7 @@ spring:
   #  password: root
 scanner:
    cron: '0 */30 * * * ?'
-   directory: D:\\video3
+   directory: /tmp
 
 video:
    imageEncoderCmd: ffmpeg -ss 00:00:01 -i <image> -vframes 1 -q:v 31 <file> -y

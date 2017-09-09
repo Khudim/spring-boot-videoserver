@@ -131,7 +131,7 @@ public class VideoHelper {
         return template;
     }
 
-    public void deleteFile(Path tempFile) {
+    private void deleteFile(Path tempFile) {
         try {
             if (tempFile != null) {
                 Files.delete(tempFile);
