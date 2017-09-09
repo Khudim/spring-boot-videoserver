@@ -6,7 +6,7 @@ logging:
     org.hibernate: ERROR
 
 server:
-  port: 8090
+  port: ${PORT:8080}
 
 spring:
   datasource:
