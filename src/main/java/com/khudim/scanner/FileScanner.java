@@ -52,7 +52,7 @@ public class FileScanner {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    private void addContentToBase(Path path) {
+    public void addContentToBase(Path path) {
         try {
             byte[] image = videoHelper.getImageFromVideo(path);
             int[] videoSize = videoHelper.getVideoSize(path);
@@ -87,6 +87,6 @@ public class FileScanner {
     }
 
     private boolean isRightPath(Path path) {
-        return path.toString().endsWith(".webm") && !contentService.isPathExist(path);
+        return Files.isDirectory(path) || path.toString().endsWith(".webm") && !contentService.isPathExist(path);
     }
 }

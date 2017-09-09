@@ -4,6 +4,7 @@ import com.khudim.dao.entity.Video;
 import com.khudim.dao.service.ContentService;
 import com.khudim.dao.service.VideoService;
 import com.khudim.parser.HtmlParser;
+import com.khudim.scanner.FileScanner;
 import com.khudim.utils.VideoHelper;
 import lombok.Data;
 import org.apache.commons.lang.StringUtils;
@@ -33,18 +34,29 @@ public class MainController {
     private final VideoService videoService;
     private final VideoHelper videoHelper;
     private final HtmlParser parser;
+    private final FileScanner fileScanner;
 
     @Autowired
-    public MainController(ContentService contentService, VideoService videoService, VideoHelper videoHelper, HtmlParser parser) {
+    public MainController(ContentService contentService, VideoService videoService, VideoHelper videoHelper, HtmlParser parser, FileScanner fileScanner) {
         this.contentService = contentService;
         this.videoService = videoService;
         this.videoHelper = videoHelper;
         this.parser = parser;
+        this.fileScanner = fileScanner;
     }
 
-    @RequestMapping(value = "/test", method = RequestMethod.GET)
-    public void test() {
-        parser.downloadVideo();
+    @RequestMapping(value = "/parse", method = RequestMethod.GET)
+    public void parse() {
+        Thread thread = new Thread(fileScanner::addVideoToBase);
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    @RequestMapping(value = "/download", method = RequestMethod.GET)
+    public void download() {
+        Thread thread = new Thread(parser::downloadVideo);
+        thread.setDaemon(true);
+        thread.start();
     }
 
     @RequestMapping(value = "/video", method = RequestMethod.GET)
