@@ -13,7 +13,7 @@ import java.io.Serializable;
 @Data
 public class Content implements Serializable{
     @Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
     private long id;
     private byte[] image;
     private String path;
