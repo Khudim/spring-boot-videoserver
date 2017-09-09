@@ -15,7 +15,7 @@ spring:
   #  username: root
   #  password: root
 scanner:
-   cron: '0 */30 * * * ?'
+   cron: '0 0 */3 * * ?'
    directory: /tmp
 
 video:
