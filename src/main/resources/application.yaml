@@ -10,9 +10,7 @@ server:
 
 spring:
   datasource:
-   url: ${JDBC_DATABASE_URL}
-   username: ${JDBC_DATABASE_USERNAME}
-   password: ${JDBC_DATABASE_PASSWORD}
+   url: ${DATABASE_URL}
   #  url: jdbc:mysql://localhost:3306/spring_boot_test
   #  username: root
   #  password: root
