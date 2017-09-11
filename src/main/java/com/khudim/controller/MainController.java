@@ -62,7 +62,7 @@ public class MainController {
 
     @RequestMapping(value = "/progress", method = RequestMethod.GET)
     public int getDownloadProgress() {
-        return HtmlParser.getProgress();
+        return parser.getProgress();
     }
 
     @RequestMapping(value = "/video", method = RequestMethod.GET)
