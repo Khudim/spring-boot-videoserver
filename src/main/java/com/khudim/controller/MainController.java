@@ -21,6 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -54,9 +55,14 @@ public class MainController {
 
     @RequestMapping(value = "/download", method = RequestMethod.GET)
     public void download() {
-        Thread thread = new Thread(parser::downloadVideo);
+        Thread thread = new Thread(() -> parser.downloadVideo(Collections.emptyList()));
         thread.setDaemon(true);
         thread.start();
+    }
+
+    @RequestMapping(value = "/progress", method = RequestMethod.GET)
+    public int getDownloadProgress() {
+        return HtmlParser.getProgress();
     }
 
     @RequestMapping(value = "/video", method = RequestMethod.GET)
