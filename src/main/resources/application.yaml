@@ -8,6 +8,8 @@ logging:
 server:
   port: ${PORT:8080}
 
+controller:
+     threads: 10
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/spring_boot_test

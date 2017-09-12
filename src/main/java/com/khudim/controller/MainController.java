@@ -12,6 +12,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -24,6 +25,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 /**
  * Created by Beaver.
@@ -38,6 +42,11 @@ public class MainController {
     private final HtmlParser parser;
     private final FileScanner fileScanner;
 
+    private final ExecutorService executorService;
+
+    @Value("{controller.threads}")
+    private int threadCount = 10;
+
     @Autowired
     public MainController(ContentService contentService, VideoService videoService, VideoHelper videoHelper, HtmlParser parser, FileScanner fileScanner) {
         this.contentService = contentService;
@@ -45,10 +54,12 @@ public class MainController {
         this.videoHelper = videoHelper;
         this.parser = parser;
         this.fileScanner = fileScanner;
+        this.executorService = Executors.newFixedThreadPool(threadCount);
     }
 
     @RequestMapping(value = "/parse", method = RequestMethod.GET)
     public void parse() {
+        executorService.submit(fileScanner::addVideoToBase);
         Thread thread = new Thread(fileScanner::addVideoToBase);
         thread.setDaemon(true);
         thread.start();
