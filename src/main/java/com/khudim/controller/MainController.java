@@ -5,6 +5,7 @@ import com.khudim.dao.service.ContentService;
 import com.khudim.dao.service.VideoService;
 import com.khudim.parser.HtmlParser;
 import com.khudim.scanner.FileScanner;
+import com.khudim.utils.ProgressBar;
 import com.khudim.utils.VideoHelper;
 import lombok.Data;
 import org.apache.commons.lang.StringUtils;
@@ -55,14 +56,14 @@ public class MainController {
 
     @RequestMapping(value = "/download", method = RequestMethod.GET)
     public void download() {
-        Thread thread = new Thread(() -> parser.downloadVideo(Collections.emptyList()));
+        Thread thread = new Thread(parser::downloadVideo);
         thread.setDaemon(true);
         thread.start();
     }
 
     @RequestMapping(value = "/progress", method = RequestMethod.GET)
-    public int getDownloadProgress() {
-        return parser.getProgress();
+    public ProgressBar getDownloadProgress() {
+        return parser.getProgressBar();
     }
 
     @RequestMapping(value = "/video", method = RequestMethod.GET)

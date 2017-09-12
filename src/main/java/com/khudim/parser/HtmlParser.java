@@ -1,6 +1,8 @@
 package com.khudim.parser;
 
 import com.khudim.dao.service.VideoService;
+import com.khudim.utils.ProgressBar;
+import lombok.Data;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jsoup.Jsoup;
@@ -18,10 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.IntStream.range;
@@ -29,6 +28,7 @@ import static java.util.stream.IntStream.range;
 /**
  * Created by Beaver.
  */
+@Data
 @Component
 public class HtmlParser {
 
@@ -36,10 +36,12 @@ public class HtmlParser {
     private final static String URL = "https://arhivach.org";
     private final static String VIDEO_TAG = "webm";
 
-    private static double progress = 0;
     private static int total;
     private final static int PAGE_LIMIT = 30;
     private final VideoService videoService;
+    private ProgressBar progressBar = new ProgressBar();
+
+    private List<String> searchTags = new ArrayList<>();
 
     @Value("${parser.directory}")
     private String directory;
@@ -50,24 +52,28 @@ public class HtmlParser {
     }
 
     @Scheduled(cron = "${parser.cron}")
-    public void downloadVideo(List<String> searchTags) {
+    public void downloadVideo() {
         LOG.debug("Start downloadVideo");
-        if (progress > 0 || progress < 100) {
+        /*if (progress > 0 && progress < 100) {
             LOG.debug("Can't start, download in progress");
             return;
-        }
-        progress = 0;
-        Set<String> urls = range(0, PAGE_LIMIT)
-                .mapToObj(i -> parseUrlsForPage(URL + generatePageString(i), searchTags))
+        }*/
+        progressBar = new ProgressBar();
+        Set<String> urls = range(0, progressBar.getScanLimit())
+                .mapToObj(i -> {
+                    progressBar.riseScanProgress();
+                    return parseUrlsForPage(URL + generatePageString(i), searchTags);
+                })
                 .flatMap(Set::stream).collect(toSet());
 
-        total = urls.size();
+        progressBar.setTotalVideos(urls.size());
+
         if (total == 0) {
             return;
         }
         urls.forEach(url -> {
             downloadVideo(url);
-            progress++;
+            progressBar.riseDownloadProgress();
         });
         LOG.debug("Stop downloadVideo");
     }
@@ -93,7 +99,7 @@ public class HtmlParser {
     }
 
     private boolean checkElement(Element element, List<String> searchTags) {
-        return searchTags.stream().allMatch(tag -> element.text().toLowerCase().equals(tag));
+        return searchTags.stream().allMatch(tag -> element.text().toLowerCase().contains(tag));
     }
 
     private void downloadVideo(String url) {
@@ -159,11 +165,6 @@ public class HtmlParser {
             LOG.error("Can't download from url: {}", url);
         }
     }
-
-    public int getProgress() {
-        return (int) (progress / total * 100);
-    }
-
 }
 
 
