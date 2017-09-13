@@ -2,6 +2,7 @@ package com.khudim.dao;
 
 import com.khudim.dao.entity.Content;
 import com.khudim.dao.repository.ContentRepository;
+import com.khudim.dao.repository.VideoRepository;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,7 +25,7 @@ public class ContentRepositoryTest {
     private ContentRepository contentRepository;
 
     @Test
-    public void findByPathTest() {
+    public void shouldFindByPath() {
         String path = "/path/to/file";
         Content expectedContent = new Content();
         expectedContent.setPath(path);
@@ -34,7 +35,7 @@ public class ContentRepositoryTest {
     }
 
     @Test
-    public void findPathByIdTest() {
+    public void shouldFindPathById() {
         String path = "/path/to/file";
         Content expectedContent = new Content();
         expectedContent.setPath(path);

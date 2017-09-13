@@ -11,9 +11,9 @@ import java.io.Serializable;
 @Entity
 @Table
 @Data
-public class Content implements Serializable{
+public class Content implements Serializable {
     @Id
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
     private byte[] image;
     private String path;

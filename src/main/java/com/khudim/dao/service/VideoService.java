@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by Beaver.
@@ -39,6 +40,17 @@ public class VideoService {
             videos = Collections.emptyList();
         }
         return videos;
+    }
+
+    public List<Video> findAllByTags(List<String> tags, int page, int limit) {
+        if (tags.isEmpty()) {
+            return findAll(page, limit);
+        }
+        return videoRepository.findAllByTags(tags, page * limit, limit).stream().limit(limit).skip(page * limit).filter(r -> {
+            System.out.println(r);
+            return true;
+        }).collect(Collectors.toList());
+
     }
 
     public long getCount() {

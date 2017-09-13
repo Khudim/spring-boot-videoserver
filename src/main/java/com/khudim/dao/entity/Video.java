@@ -20,4 +20,5 @@ public class Video implements Serializable {
     private long contentId;
     private int width;
     private int height;
+    private String tags;
 }

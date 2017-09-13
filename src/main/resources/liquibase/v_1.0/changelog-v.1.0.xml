@@ -24,6 +24,9 @@
             <column name="height" type="INT">
                 <constraints nullable="true"/>
             </column>
+            <column name="tags" type="VARCHAR">
+                <constraints nullable="true"/>
+            </column>
         </createTable>
     </changeSet>
 
