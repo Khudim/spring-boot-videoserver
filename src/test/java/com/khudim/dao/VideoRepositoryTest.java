@@ -3,6 +3,7 @@ package com.khudim.dao;
 import com.khudim.dao.entity.Video;
 import com.khudim.dao.repository.VideoRepository;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,38 +28,43 @@ public class VideoRepositoryTest {
     @Autowired
     private VideoRepository videoRepository;
 
-    @Test
-    public void shouldFindByTag() {
+    @Before
+    public void setup() {
         Video video1 = new Video();
         video1.setTag("tEst");
+        video1.setName("name");
         Video video2 = new Video();
         video2.setTag("fail");
+        video2.setName("name");
         Video video3 = new Video();
         video3.setTag("test2");
 
         entityManager.persist(video1);
         entityManager.persist(video2);
         entityManager.persist(video3);
+    }
 
-        List<Video> videos = videoRepository.findByTagIgnoreCase("test", new PageRequest(0, 2));
-        System.out.println(videos);
+    @Test
+    public void shouldFindByTag() {
+        List<Video> videos = videoRepository.findByTagIgnoreCase("test2", new PageRequest(0, 2));
+        Assert.assertFalse(videos.isEmpty());
     }
 
     @Test
     public void shouldFindByTags() {
-        Video video1 = new Video();
-        video1.setTag("tEst");
-        Video video2 = new Video();
-        video2.setTag("fail");
-        Video video3 = new Video();
-        video3.setTag("test2");
-
-        entityManager.persist(video1);
-        entityManager.persist(video2);
-        entityManager.persist(video3);
-
         List<Video> videos = videoRepository.findByTags(Arrays.asList("test", "fail", "test2"), new PageRequest(0, 2));
         Assert.assertEquals(2, videos.size());
-        Assert.assertTrue(videos.contains(video3));
+    }
+
+    @Test
+    public void shouldFindOne() {
+        Video video = videoRepository.findFirstByName("name");
+        Assert.assertNotNull(video);
+    }
+
+    @Test
+    public void shouldCountByTags() {
+        long count = videoRepository.countByTags(Arrays.asList("fail", "test2"));
+        Assert.assertEquals(2, count);
     }
 }

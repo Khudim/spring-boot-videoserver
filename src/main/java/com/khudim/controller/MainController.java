@@ -81,7 +81,7 @@ public class MainController {
     @RequestMapping(value = "/video", method = RequestMethod.POST)
     public ResponseContent getVideo(@RequestParam List<String> tags, @RequestParam int page, @RequestParam int limit, HttpServletResponse response) {
         response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
-        long count = contentService.getCount(tags);
+        long count = videoService.getCount(tags);
         List<Video> videos = videoService.findByTag(tags, page, limit);
         return new ResponseContent(count, videos);
     }

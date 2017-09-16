@@ -17,10 +17,13 @@ import java.util.List;
 @Repository
 public interface VideoRepository extends JpaRepository<Video, Long>, CrudRepository<Video, Long> {
 
-    Long countByName(String name);
+    Video findFirstByName(String name);
 
     @Query("SELECT v FROM Video v WHERE v.tag IN (:tags)")
     List<Video> findByTags(@Param("tags") List<String> tags, Pageable pageable);
 
     List<Video> findByTagIgnoreCase(String tag, Pageable pageable);
+
+    @Query("SELECT COUNT(v) FROM Video v WHERE v.tag IN (:tags)")
+    Long countByTags(@Param("tags") List<String> tags);
 }

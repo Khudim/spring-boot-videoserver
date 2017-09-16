@@ -44,12 +44,4 @@ public class ContentService {
     public byte[] getImage(long contentId) {
         return contentRepository.findImageById(contentId);
     }
-
-    public long getCount(List<String> tags) {
-        if(tags == null || tags.isEmpty()){
-            return contentRepository.count();
-        }
-        //return contentRepository.countByTag(tags);
-        return 0;
-    }
 }

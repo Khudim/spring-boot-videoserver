@@ -4,6 +4,7 @@ import com.khudim.dao.entity.Content;
 import com.khudim.dao.repository.ContentRepository;
 import com.khudim.dao.repository.VideoRepository;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,23 +25,18 @@ public class ContentRepositoryTest {
     @Autowired
     private ContentRepository contentRepository;
 
-    @Test
-    public void shouldFindByPath() {
-        String path = "/path/to/file";
+    private String path = "path";
+
+    @Before
+    public void setup(){
         Content expectedContent = new Content();
         expectedContent.setPath(path);
         this.entityManager.persist(expectedContent);
-        Long count = contentRepository.countByPath(path);
-        Assert.assertTrue(count > 0);
     }
 
     @Test
-    public void shouldFindPathById() {
-        String path = "/path/to/file";
-        Content expectedContent = new Content();
-        expectedContent.setPath(path);
-        this.entityManager.persist(expectedContent);
-        String testContent = contentRepository.findPathById(expectedContent.getId());
-        Assert.assertNotNull(testContent);
+    public void shouldFindByPath() {
+        Long count = contentRepository.countByPath(path);
+        Assert.assertTrue(count > 0);
     }
 }

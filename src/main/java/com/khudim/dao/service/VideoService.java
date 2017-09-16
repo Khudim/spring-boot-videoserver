@@ -23,7 +23,7 @@ public class VideoService {
     }
 
     public boolean isRepeated(String name) {
-        return videoRepository.countByName(name) > 0;
+        return videoRepository.findFirstByName(name) != null;
     }
 
     public void save(Video video) {
@@ -47,5 +47,12 @@ public class VideoService {
 
     public long getCount() {
         return videoRepository.count();
+    }
+
+    public long getCount(List<String> tags) {
+        if(tags == null || tags.isEmpty()){
+            return getCount();
+        }
+        return videoRepository.countByTags(tags);
     }
 }
