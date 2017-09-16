@@ -21,4 +21,7 @@ public interface ContentRepository extends CrudRepository<Content, Long> {
     String findPathById(@Param("contentId") long contentId);
 
     Long countByPath(String path);
+
+   //@Query("SELECT COUNT(c) FROM Content c WHERE c.tag IN (:tags)")
+ //   Long countByTag(@Param("tags") List<String> tags);
 }

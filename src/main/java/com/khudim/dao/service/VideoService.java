@@ -42,15 +42,10 @@ public class VideoService {
         if (tags.isEmpty()) {
             return findAll(page, limit);
         }
-        String tag = tags.get(0);
-        return videoRepository.findByTagIgnoreCase(tag, new PageRequest(page, limit));
+        return videoRepository.findByTags(tags, new PageRequest(page, limit));
     }
 
     public long getCount() {
-        return videoRepository.count();
-    }
-
-    public long getCount(List<String> tags) {
         return videoRepository.count();
     }
 }
