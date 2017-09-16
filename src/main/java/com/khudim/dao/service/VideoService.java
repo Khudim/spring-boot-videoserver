@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Created by Beaver.
@@ -24,9 +23,6 @@ public class VideoService {
     }
 
     public boolean isRepeated(String name) {
-        if (videoRepository.countByName(name) > 0) {
-            System.out.println(name);
-        }
         return videoRepository.countByName(name) > 0;
     }
 
@@ -42,18 +38,19 @@ public class VideoService {
         return videos;
     }
 
-    public List<Video> findAllByTags(List<String> tags, int page, int limit) {
+    public List<Video> findByTag(List<String> tags, int page, int limit) {
         if (tags.isEmpty()) {
             return findAll(page, limit);
         }
-        return videoRepository.findAllByTags(tags, page * limit, limit).stream().limit(limit).skip(page * limit).filter(r -> {
-            System.out.println(r);
-            return true;
-        }).collect(Collectors.toList());
-
+        String tag = tags.get(0);
+        return videoRepository.findByTagIgnoreCase(tag, new PageRequest(page, limit));
     }
 
     public long getCount() {
+        return videoRepository.count();
+    }
+
+    public long getCount(List<String> tags) {
         return videoRepository.count();
     }
 }

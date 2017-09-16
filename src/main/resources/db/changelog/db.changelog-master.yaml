@@ -30,6 +30,9 @@ databaseChangeLog:
               - column:
                   name: height
                   type: int
+              - column:
+                  name: tag
+                  type: varchar(255)
 
         - createTable:
             tableName: content

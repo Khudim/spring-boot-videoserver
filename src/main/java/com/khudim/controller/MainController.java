@@ -23,11 +23,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 /**
  * Created by Beaver.
@@ -45,7 +43,7 @@ public class MainController {
     private final ExecutorService executorService;
 
     @Value("{controller.threads}")
-    private int threadCount = 10;
+    private int threadCount = 2;
 
     @Autowired
     public MainController(ContentService contentService, VideoService videoService, VideoHelper videoHelper, HtmlParser parser, FileScanner fileScanner) {
@@ -60,16 +58,11 @@ public class MainController {
     @RequestMapping(value = "/parse", method = RequestMethod.GET)
     public void parse() {
         executorService.submit(fileScanner::addVideoToBase);
-        Thread thread = new Thread(fileScanner::addVideoToBase);
-        thread.setDaemon(true);
-        thread.start();
     }
 
     @RequestMapping(value = "/download", method = RequestMethod.GET)
     public void download() {
-        Thread thread = new Thread(parser::downloadVideo);
-        thread.setDaemon(true);
-        thread.start();
+        executorService.submit(parser::downloadVideo);
     }
 
     @RequestMapping(value = "/progress", method = RequestMethod.GET)
@@ -82,6 +75,14 @@ public class MainController {
         response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
         long count = videoService.getCount();
         List<Video> videos = videoService.findAll(page, limit);
+        return new ResponseContent(count, videos);
+    }
+
+    @RequestMapping(value = "/video", method = RequestMethod.POST)
+    public ResponseContent getVideo(@RequestParam List<String> tags, @RequestParam int page, @RequestParam int limit, HttpServletResponse response) {
+        response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+        long count = videoService.getCount(tags);
+        List<Video> videos = videoService.findByTag(tags, page, limit);
         return new ResponseContent(count, videos);
     }
 
