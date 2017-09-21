@@ -22,6 +22,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.*;
 
+import static com.khudim.utils.VideoHelper.VIDEO_TAG;
+import static com.khudim.utils.VideoHelper.createFileNameWithTags;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.IntStream.range;
 
@@ -34,14 +36,12 @@ public class HtmlParser {
 
     private final static Logger LOG = LoggerFactory.getLogger(HtmlParser.class);
     private final static String URL = "https://arhivach.org";
-    private final static String VIDEO_TAG = "webm";
-
-    private static int total;
     private final static int PAGE_LIMIT = 30;
     private final VideoService videoService;
-    private ProgressBar progressBar = new ProgressBar();
+    private List<String> searchTags = Arrays.asList(VIDEO_TAG);
+    private static int total;
 
-    private List<String> searchTags = new ArrayList<>();
+    private ProgressBar progressBar = new ProgressBar();
 
     @Value("${parser.directory}")
     private String directory;
@@ -52,27 +52,31 @@ public class HtmlParser {
     }
 
     @Scheduled(cron = "${parser.cron}")
-    public void downloadVideo() {
+    public void schedulingDownload() {
+        LOG.debug("Start scheduling download");
+        downloadVideo(Arrays.asList(VIDEO_TAG));
+        LOG.debug("Stop scheduling download");
+    }
+
+    public void downloadVideo(List<String> tags) {
         LOG.debug("Start downloadVideo");
-        /*if (progress > 0 && progress < 100) {
-            LOG.debug("Can't start, download in progress");
-            return;
-        }*/
         progressBar = new ProgressBar();
         Set<String> urls = range(0, progressBar.getScanLimit())
                 .mapToObj(i -> {
                     progressBar.riseScanProgress();
-                    return parseUrlsForPage(URL + generatePageString(i), searchTags);
+                    return parseUrlsForPage(URL + generatePageString(i), tags);
                 })
                 .flatMap(Set::stream).collect(toSet());
 
         progressBar.setTotalVideos(urls.size());
 
+        total = urls.size();
         if (total == 0) {
+            LOG.debug("Total is 0");
             return;
         }
         urls.forEach(url -> {
-            downloadVideo(url);
+            downloadVideo(url, tags);
             progressBar.riseDownloadProgress();
         });
         LOG.debug("Stop downloadVideo");
@@ -80,7 +84,6 @@ public class HtmlParser {
 
     private Set<String> parseUrlsForPage(String pageUrl, List<String> searchTags) {
         Set<String> urls = new HashSet<>();
-        searchTags.add(VIDEO_TAG);
         getDocument(pageUrl, 0)
                 .ifPresent(document -> {
                             urls.addAll(document
@@ -99,17 +102,17 @@ public class HtmlParser {
     }
 
     private boolean checkElement(Element element, List<String> searchTags) {
-        return searchTags.stream().allMatch(tag -> element.text().toLowerCase().contains(tag));
+        return searchTags.stream().allMatch(tag -> element.text().toLowerCase().contains(tag.toLowerCase()));
     }
 
-    private void downloadVideo(String url) {
+    private void downloadVideo(String url, List<String> searchTags) {
         getDocument(url, 0)
                 .ifPresent(document -> document.addClass("img_filename")
                         .getAllElements()
                         .stream()
                         .map(element -> element.attr("href"))
                         .filter(this::checkFile)
-                        .forEach(src -> downloadFromSrc(src, getFileNameFromUrl(src))));
+                        .forEach(src -> downloadFromSrc(src, getFileNameFromUrl(src), searchTags)));
     }
 
     private boolean checkFile(String src) {
@@ -145,22 +148,22 @@ public class HtmlParser {
     }
 
     private String generatePageString(int numberOfPage) {
-        String pagePrefix = "/index/";
+        String indexPage = "/index/";
         if (numberOfPage <= 0) {
-            return pagePrefix;
+            return indexPage;
         } else {
-            return pagePrefix + numberOfPage * 25;
+            return indexPage + numberOfPage * 25;
         }
     }
 
-    private void downloadFromSrc(String url, String fileName) {
+    private void downloadFromSrc(String url, String fileName, List<String> searchTags) {
         try {
             LOG.debug("Start download {}", url);
             URL imgSrc = new URL(url);
             URLConnection con = imgSrc.openConnection();
             con.setRequestProperty("User-Agent", "NING/1.0");
             InputStream is = con.getInputStream();
-            FileUtils.copyInputStreamToFile(is, new File(directory + fileName));
+            FileUtils.copyInputStreamToFile(is, new File(directory + createFileNameWithTags(fileName, searchTags)));
         } catch (IOException e) {
             LOG.error("Can't download from url: {}", url);
         }

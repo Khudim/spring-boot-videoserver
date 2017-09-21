@@ -6,7 +6,7 @@ logging:
     org.hibernate: ERROR
 
 server:
-  port: ${PORT:8080}
+  port: ${PORT:80}
 
 controller:
      threads: 10

@@ -1,6 +1,7 @@
 package com.khudim.utils;
 
 import lombok.Data;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,7 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.apache.commons.lang.math.NumberUtils.toInt;
@@ -25,7 +26,7 @@ import static org.apache.commons.lang.math.NumberUtils.toInt;
 @Data
 @ConfigurationProperties(prefix = "video")
 public class VideoHelper {
-
+    public final static String VIDEO_TAG = "webm";
     private static Logger log = LoggerFactory.getLogger(VideoHelper.class);
 
     private String imageEncoderCmd = "ffmpeg -ss 00:00:01 -i <image> -vframes 1 -q:v 31 <file> -y";
@@ -148,5 +149,10 @@ public class VideoHelper {
         } catch (IOException e) {
             log.error("Can't delete file: {}", e);
         }
+    }
+
+    public static String createFileNameWithTags(String fileName, List<String> tags) {
+        String extension = "." + VIDEO_TAG;
+        return fileName.replaceAll(extension, "_" + StringUtils.join(tags, ";")) + extension;
     }
 }

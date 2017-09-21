@@ -23,9 +23,12 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import static com.khudim.utils.VideoHelper.VIDEO_TAG;
 
 /**
  * Created by Beaver.
@@ -39,10 +42,9 @@ public class MainController {
     private final VideoHelper videoHelper;
     private final HtmlParser parser;
     private final FileScanner fileScanner;
-
     private final ExecutorService executorService;
 
-    @Value("{controller.threads}")
+    @Value("${controller.threads}")
     private int threadCount = 2;
 
     @Autowired
@@ -62,7 +64,7 @@ public class MainController {
 
     @RequestMapping(value = "/download", method = RequestMethod.GET)
     public void download() {
-        executorService.submit(parser::downloadVideo);
+        executorService.submit(() -> parser.downloadVideo(Arrays.asList("МУЗЫКАЛЬНЫЙ", VIDEO_TAG)));
     }
 
     @RequestMapping(value = "/progress", method = RequestMethod.GET)
