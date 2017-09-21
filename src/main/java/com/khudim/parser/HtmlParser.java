@@ -38,8 +38,6 @@ public class HtmlParser {
     private final static String URL = "https://arhivach.org";
     private final static int PAGE_LIMIT = 30;
     private final VideoService videoService;
-    private List<String> searchTags = Arrays.asList(VIDEO_TAG);
-    private static int total;
 
     private ProgressBar progressBar = new ProgressBar();
 
@@ -70,8 +68,7 @@ public class HtmlParser {
 
         progressBar.setTotalVideos(urls.size());
 
-        total = urls.size();
-        if (total == 0) {
+        if (urls.size() == 0) {
             LOG.debug("Total is 0");
             return;
         }
