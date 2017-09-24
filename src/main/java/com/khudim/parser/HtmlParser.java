@@ -20,8 +20,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
 
+import static com.khudim.utils.Utilities.sleep;
 import static com.khudim.utils.VideoHelper.VIDEO_TAG;
 import static com.khudim.utils.VideoHelper.createFileNameWithTags;
 import static java.util.stream.Collectors.toSet;
@@ -38,9 +42,7 @@ public class HtmlParser {
     private final static String URL = "https://arhivach.org";
     private final static int PAGE_LIMIT = 30;
     private final VideoService videoService;
-
     private ProgressBar progressBar = new ProgressBar();
-
     @Value("${parser.directory}")
     private String directory;
 
@@ -69,7 +71,7 @@ public class HtmlParser {
         progressBar.setTotalVideos(urls.size());
 
         if (urls.size() == 0) {
-            LOG.debug("Total is 0");
+            LOG.debug("Total urls == 0");
             return;
         }
         urls.forEach(url -> {
@@ -80,22 +82,20 @@ public class HtmlParser {
     }
 
     private Set<String> parseUrlsForPage(String pageUrl, List<String> searchTags) {
-        Set<String> urls = new HashSet<>();
-        getDocument(pageUrl, 0)
-                .ifPresent(document -> {
-                            urls.addAll(document
-                                    .addClass("thread_text")
-                                    .getAllElements()
-                                    .stream()
-                                    .filter(element -> checkElement(element, searchTags))
-                                    .map(element -> element.attr("href"))
-                                    .filter(StringUtils::isNotBlank)
-                                    .map(href -> URL + href)
-                                    .collect(toSet()));
-                            LOG.debug("urls size = " + urls.size());
-                        }
-                );
-        return urls;
+        return Stream.ofNullable(getConnection(pageUrl, 0))
+                .flatMap(document -> searchUrls(document, searchTags))
+                .collect(toSet());
+    }
+
+    private Stream<String> searchUrls(Document document, List<String> searchTags) {
+        return
+                document.addClass("thread_text")
+                        .getAllElements()
+                        .stream()
+                        .filter(element -> checkElement(element, searchTags))
+                        .map(element -> element.attr("href"))
+                        .filter(StringUtils::isNotBlank)
+                        .map(href -> URL + href);
     }
 
     private boolean checkElement(Element element, List<String> searchTags) {
@@ -103,13 +103,16 @@ public class HtmlParser {
     }
 
     private void downloadVideo(String url, List<String> searchTags) {
-        getDocument(url, 0)
-                .ifPresent(document -> document.addClass("img_filename")
-                        .getAllElements()
-                        .stream()
-                        .map(element -> element.attr("href"))
-                        .filter(this::checkFile)
-                        .forEach(src -> downloadFromSrc(src, getFileNameFromUrl(src), searchTags)));
+        Stream.ofNullable(getConnection(url, 0)).forEach(document -> downloadByTags(document, searchTags));
+    }
+
+    private void downloadByTags(Document document, List<String> searchTags) {
+        document.addClass("img_filename")
+                .getAllElements()
+                .stream()
+                .map(element -> element.attr("href"))
+                .filter(this::checkFile)
+                .forEach(src -> downloadFromSrc(src, getFileNameFromUrl(src), searchTags));
     }
 
     private boolean checkFile(String src) {
@@ -120,27 +123,19 @@ public class HtmlParser {
         return src.substring(src.lastIndexOf("/"));
     }
 
-    private Optional<Document> getDocument(String url, int attemptCount) {
+    private Document getConnection(String url, int attemptCount) {
         try {
-            return Optional.ofNullable(Jsoup.connect(url)
+            return Jsoup.connect(url)
                     .userAgent("NING/1.0")
-                    .get());
+                    .get();
         } catch (IOException e) {
             LOG.warn("Can't get document, reason: ", e.getMessage());
             if (attemptCount < 5) {
                 sleep();
-                return getDocument(url, ++attemptCount);
+                return getConnection(url, ++attemptCount);
             } else {
-                return Optional.empty();
+                return null;
             }
-        }
-    }
-
-    private void sleep() {
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e1) {
-            e1.printStackTrace();
         }
     }
 
