@@ -1,15 +1,9 @@
 package com.khudim.dao.repository;
 
 import com.khudim.dao.entity.Video;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 /**
  * Created by Beaver.
@@ -19,11 +13,11 @@ public interface VideoRepository extends JpaRepository<Video, Long>, CrudReposit
 
     Video findFirstByName(String name);
 
-    @Query("SELECT v FROM Video v WHERE v.tag IN (:tags)")
-    List<Video> findByTags(@Param("tags") List<String> tags, Pageable pageable);
+//    @Query("SELECT v FROM Video v WHERE v.tags IN (:tags)")
+    //   List<Video> findByTags(@Param("tags") List<Tags> tags, Pageable pageable);
 
-    List<Video> findByTagIgnoreCase(String tag, Pageable pageable);
+    // List<Video> findByTagsIgnoreCase(String tag, Pageable pageable);
 
-    @Query("SELECT COUNT(v) FROM Video v WHERE v.tag IN (:tags)")
-    Long countByTags(@Param("tags") List<String> tags);
+    // @Query("SELECT COUNT(v) FROM Video v WHERE v.tags IN (:tags)")
+    // Long countByTags(@Param("tags") List<Tags> tags);
 }

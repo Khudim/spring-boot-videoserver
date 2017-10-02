@@ -9,7 +9,7 @@ databaseChangeLog:
             tableName: video
             columns:
               - column:
-                  name: id
+                  name: video_id
                   type: bigint
                   autoIncrement: true
                   constraints:
@@ -31,8 +31,8 @@ databaseChangeLog:
                   name: height
                   type: int
               - column:
-                  name: tag
-                  type: varchar(255)
+                  name: tag_id
+                  type: bigint
 
         - createTable:
             tableName: content
@@ -42,11 +42,45 @@ databaseChangeLog:
                   type: bigint
                   autoIncrement: true
                   constraints:
-                    primaryKey: true
-                    nullable: false
+                   primaryKey: true
+                   nullable: false
               - column:
                   name: image
                   type: MEDIUMBLOB
               - column:
                   name: path
                   type: varchar(255)
+
+        - createTable:
+            tableName: tags
+            columns:
+              - column:
+                     name: tag_id
+                     type: bigint
+                     autoIncrement: true
+                     constraints:
+                      primaryKey: true
+                      nullable: false
+              - column:
+                     name: tag
+                     type: varchar(255)
+
+        - createTable:
+            tableName: video_tags
+            columns:
+                    - column:
+                          name: video_id
+                          type: bigint
+                          constraints:
+                           primaryKey: true
+                           foreignKeyName: fk_video
+                           references: video(video_id)
+                           nullable: false
+                    - column:
+                          name: tag_id
+                          type: bigint
+                          constraints:
+                           primaryKey: true
+                           foreignKeyName: fk_tag
+                           references: tags(tag_id)
+                           nullable: false

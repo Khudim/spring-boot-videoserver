@@ -4,7 +4,6 @@ logging:
     com.khudim.parser: DEBUG
     org.springframework.web: ERROR
     org.hibernate: ERROR
-
 server:
   port: ${PORT:80}
 
@@ -15,6 +14,8 @@ spring:
     url: jdbc:postgresql://localhost:5432/spring_boot_test
     username: postgres
     password: smeni321
+  jpa:
+    show-sql: true
     #url: ${DATABASE_URL}
     #url: jdbc:mysql://localhost:3306/spring_boot_test
 scanner:

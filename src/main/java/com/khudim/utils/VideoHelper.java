@@ -29,8 +29,8 @@ public class VideoHelper {
     public final static String VIDEO_TAG = "webm";
     private static Logger log = LoggerFactory.getLogger(VideoHelper.class);
 
-    private String imageEncoderCmd = "ffmpeg -ss 00:00:01 -i <image> -vframes 1 -q:v 31 <file> -y";
-    private String videoSizeCmd = "ffprobe -v error -show_entries stream=width,height -of default=noprint_wrappers=1 <video>";
+    private final static String imageEncoderCmd = "ffmpeg -ss 00:00:01 -i <image> -vframes 1 -q:v 31 <file> -y";
+    private final static String videoSizeCmd = "ffprobe -v error -show_entries stream=width,height -of default=noprint_wrappers=1 <video>";
 
     @Value("${scanner.tmpDir}")
     private String tmpDir = "/tmp";
@@ -74,7 +74,7 @@ public class VideoHelper {
         return ranges;
     }
 
-    public int[] getVideoSize(Path path) throws IOException, InterruptedException {
+    public static int[] getVideoSize(Path path) throws IOException, InterruptedException {
         int width;
         int height;
         Process pb = null;
@@ -85,7 +85,7 @@ public class VideoHelper {
                     .start();
             pb.waitFor(10, TimeUnit.SECONDS);
 
-            String[] output = output(pb.getInputStream());
+            String[] output = readOutput(pb.getInputStream());
             if (output.length < 2) {
                 throw new IOException("Can't get video parameters with command: " + videoSizeCmd);
             }
@@ -99,13 +99,13 @@ public class VideoHelper {
         return new int[]{width, height};
     }
 
-    private String[] output(InputStream inputStream) throws IOException {
+    private static String[] readOutput(InputStream inputStream) throws IOException {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
             return reader.lines().toArray(String[]::new);
         }
     }
 
-    public byte[] getImageFromVideo(Path path) {
+    public static byte[] getImageFromVideo(Path path) {
         File tempFile = null;
         Process process = null;
         ST template = new ST(imageEncoderCmd);
@@ -134,14 +134,14 @@ public class VideoHelper {
         }
     }
 
-    private ST createVideoSizeCmd(Path path) {
+    private static ST createVideoSizeCmd(Path path) {
         ST template = new ST(videoSizeCmd);
         template.add("video", path.toString());
         template.render();
         return template;
     }
 
-    private void deleteFile(Path tempFile) {
+    private static void deleteFile(Path tempFile) {
         try {
             if (tempFile != null) {
                 Files.delete(tempFile);

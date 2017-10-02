@@ -42,7 +42,8 @@ public class VideoService {
         if (tags.isEmpty()) {
             return findAll(page, limit);
         }
-        return videoRepository.findByTags(tags, new PageRequest(page, limit));
+        return null;
+        //return videoRepository.findByTags(tags, new PageRequest(page, limit));
     }
 
     public long getCount() {
@@ -50,9 +51,10 @@ public class VideoService {
     }
 
     public long getCount(List<String> tags) {
-        if(tags == null || tags.isEmpty()){
+        if (tags == null || tags.isEmpty()) {
             return getCount();
         }
-        return videoRepository.countByTags(tags);
+        return 0;
+        //return videoRepository.countByTags(tags);
     }
 }

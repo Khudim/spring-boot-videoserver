@@ -4,7 +4,6 @@ import com.khudim.dao.entity.Video;
 import com.khudim.dao.service.ContentService;
 import com.khudim.dao.service.VideoService;
 import com.khudim.parser.HtmlParser;
-import com.khudim.scanner.FileScanner;
 import com.khudim.utils.ProgressBar;
 import com.khudim.utils.VideoHelper;
 import lombok.Data;
@@ -23,12 +22,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static com.khudim.utils.VideoHelper.VIDEO_TAG;
 
 /**
  * Created by Beaver.
@@ -41,34 +38,28 @@ public class MainController {
     private final VideoService videoService;
     private final VideoHelper videoHelper;
     private final HtmlParser parser;
-    private final FileScanner fileScanner;
     private final ExecutorService executorService;
 
     @Value("${controller.threads}")
     private int threadCount = 2;
 
     @Autowired
-    public MainController(ContentService contentService, VideoService videoService, VideoHelper videoHelper, HtmlParser parser, FileScanner fileScanner) {
+    public MainController(ContentService contentService, VideoService videoService, VideoHelper videoHelper, HtmlParser parser) {
         this.contentService = contentService;
         this.videoService = videoService;
         this.videoHelper = videoHelper;
         this.parser = parser;
-        this.fileScanner = fileScanner;
         this.executorService = Executors.newFixedThreadPool(threadCount);
-    }
-
-    @RequestMapping(value = "/parse", method = RequestMethod.GET)
-    public void parse() {
-        executorService.submit(fileScanner::addVideoToBase);
     }
 
     @RequestMapping(value = "/download", method = RequestMethod.GET)
     public void download() {
-        executorService.submit(() -> parser.downloadVideo(Arrays.asList("МУЗЫКАЛЬНЫЙ", VIDEO_TAG)));
+        executorService.submit(parser::findVideos);
     }
 
     @RequestMapping(value = "/progress", method = RequestMethod.GET)
-    public ProgressBar getDownloadProgress() {
+    public ProgressBar getDownloadProgress(HttpServletResponse response) {
+        response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
         return parser.getProgressBar();
     }
 
