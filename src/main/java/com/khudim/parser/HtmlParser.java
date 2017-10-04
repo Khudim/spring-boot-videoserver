@@ -1,6 +1,7 @@
 package com.khudim.parser;
 
 import com.khudim.dao.entity.Content;
+import com.khudim.dao.entity.Tags;
 import com.khudim.dao.entity.Video;
 import com.khudim.dao.service.ContentService;
 import com.khudim.dao.service.TagsService;
@@ -188,18 +189,30 @@ public class HtmlParser {
             content.setImage(image);
             contentService.save(content);
 
-            Video video = new Video();
-            video.setContentId(content.getId());
-            video.setName(fileName);
-            video.setDate(System.currentTimeMillis());
-            video.setWidth(videoSize[0]);
-            video.setHeight(videoSize[1]);
-            video.setVideoTags(tagsService.findTags(info.getTags()));
+            Video video = createVideo(fileName, videoSize, content);
+            prepareTags(info, video);
+
             videoService.save(video);
         } catch (Exception e) {
             //videoHelper.deleteFile(path);
             LOG.error("Can't prepare content " + contentPath, e);
         }
+    }
+
+    private void prepareTags(ContentInfo info, Video video) {
+        Set<Tags> tags = tagsService.findTags(info.getTags());
+        video.setVideoTags(tags);
+        tags.forEach(t -> t.getVideos().add(video));
+    }
+
+    private Video createVideo(String fileName, int[] videoSize, Content content) {
+        Video video = new Video();
+        video.setContentId(content.getId());
+        video.setName(fileName);
+        video.setDate(System.currentTimeMillis());
+        video.setWidth(videoSize[0]);
+        video.setHeight(videoSize[1]);
+        return video;
     }
 
     @Data

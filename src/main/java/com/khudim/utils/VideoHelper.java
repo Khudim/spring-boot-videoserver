@@ -1,7 +1,6 @@
 package com.khudim.utils;
 
 import lombok.Data;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,7 +12,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.apache.commons.lang.math.NumberUtils.toInt;
@@ -55,7 +53,6 @@ public class VideoHelper {
     }
 
     private String[] parseRanges(String range, long fileLength) {
-
         String[] ranges = range.split("=")[1].split("-");
 
         if (ranges.length < 2) {
@@ -63,14 +60,12 @@ public class VideoHelper {
             String stop = String.valueOf(fileLength - 1);
             ranges = new String[]{start, stop};
         }
-
         long stop = Long.parseLong(ranges[1]);
 
         if (stop > fileLength) {
             stop = fileLength - 1;
             ranges[1] = String.valueOf(stop);
         }
-
         return ranges;
     }
 
@@ -149,10 +144,5 @@ public class VideoHelper {
         } catch (IOException e) {
             log.error("Can't delete file: {}", e);
         }
-    }
-
-    public static String createFileNameWithTags(String fileName, List<String> tags) {
-        String extension = "." + VIDEO_TAG;
-        return fileName.replaceAll(extension, "_" + StringUtils.join(tags, ";")) + extension;
     }
 }

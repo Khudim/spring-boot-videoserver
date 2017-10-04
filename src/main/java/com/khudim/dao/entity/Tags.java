@@ -11,7 +11,7 @@ import java.util.Set;
 @Entity
 @Data
 @Table(name = "tags")
-@EqualsAndHashCode(exclude = {"videos"})
+@EqualsAndHashCode(exclude = {"videos", "id"})
 @ToString(exclude = "videos")
 public class Tags {
     @Id

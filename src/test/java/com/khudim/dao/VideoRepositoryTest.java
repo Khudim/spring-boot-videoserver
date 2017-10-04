@@ -12,10 +12,14 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author hudyshkin.
@@ -32,6 +36,7 @@ public class VideoRepositoryTest {
 
     @Autowired
     private TagsRepository tagsRepository;
+
 
     @Before
     public void setup() {
@@ -59,15 +64,14 @@ public class VideoRepositoryTest {
     @Test
     public void shouldFindByTag() {
         Tags tag = tagsRepository.findFirstByTag(".webm");
-        System.out.println(tagsRepository.findAll());
-        System.out.println(tag.getVideos());
-        //List<Video> videos = videoRepository.findByTagIgnoreCase("test2", new PageRequest(0, 2));
+        Assert.assertFalse(tag == null);
     }
 
     @Test
     public void shouldFindByTags() {
-        //       List<Video> videos = videoRepository.findByTags(Arrays.asList("test", "fail", "test2"), new PageRequest(0, 2));
-        //      Assert.assertEquals(2, videos.size());
+        Set<Tags> tags = List.of(".webm", "fap", "test2").stream().map(tag -> tagsRepository.findFirstByTag(tag)).filter(Objects::nonNull).collect(Collectors.toSet());
+        List<Video> videos = videoRepository.findByVideoTags(tags, new PageRequest(0, 2));
+        Assert.assertEquals(2, videos.size());
     }
 
     @Test
@@ -78,7 +82,8 @@ public class VideoRepositoryTest {
 
     @Test
     public void shouldCountByTags() {
-        //    long count = videoRepository.countByTags(Arrays.asList("fail", "test2"));
-        //   Assert.assertEquals(2, count);
+        Set<Tags> tags = List.of(".webm", "fap", "test2").stream().map(tag -> tagsRepository.findFirstByTag(tag)).filter(Objects::nonNull).collect(Collectors.toSet());
+        long count = videoRepository.countByVideoTags(tags);
+        Assert.assertEquals(2, count);
     }
 }
