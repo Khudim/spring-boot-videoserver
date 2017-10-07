@@ -11,6 +11,7 @@ import com.khudim.utils.VideoHelper;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -105,11 +106,11 @@ public class HtmlParser {
                 .getAllElements()
                 .stream()
                 .filter(this::checkElement)
-                .map(element -> new ContentInfo(element.attr("href"), List.of(element.text().toLowerCase().split(" "))));
+                .map(element -> new ContentInfo(URL + element.attr("href"), List.of(element.text().toLowerCase().split(" "))));
     }
 
     private boolean checkElement(Element element) {
-        return element.text().toLowerCase().contains(VIDEO_TAG);
+        return element.text().toLowerCase().contains(VIDEO_TAG) && StringUtils.isNotBlank(element.attr("href"));
     }
 
     private void downloadVideo(ContentInfo info) {
@@ -191,8 +192,14 @@ public class HtmlParser {
 
             Video video = createVideo(fileName, videoSize, content);
             prepareTags(info, video);
-
             videoService.save(video);
+            Set<Tags> tags = tagsService.findOrCreateTags(info.getTags());
+            video.setVideoTags(tags);
+            tags.forEach(t -> {
+                t.addVideo(video);
+                tagsService.save(t);
+            });
+            //
         } catch (Exception e) {
             //videoHelper.deleteFile(path);
             LOG.error("Can't prepare content " + contentPath, e);
@@ -200,9 +207,7 @@ public class HtmlParser {
     }
 
     private void prepareTags(ContentInfo info, Video video) {
-        Set<Tags> tags = tagsService.findTags(info.getTags());
-        video.setVideoTags(tags);
-        tags.forEach(t -> t.getVideos().add(video));
+
     }
 
     private Video createVideo(String fileName, int[] videoSize, Content content) {

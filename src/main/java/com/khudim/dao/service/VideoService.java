@@ -46,7 +46,7 @@ public class VideoService {
         if (tags.isEmpty()) {
             return findAll(page, limit);
         }
-        Set<Tags> loadedTags = tagsService.findTags(tags);
+        Set<Tags> loadedTags = tagsService.findOrCreateTags(tags);
         if (loadedTags.isEmpty()) {
             return Collections.EMPTY_LIST;
         }
@@ -62,7 +62,7 @@ public class VideoService {
         if (tags == null || tags.isEmpty()) {
             return getCount();
         }
-        Set<Tags> loadedTags = tagsService.findTags(tags);
+        Set<Tags> loadedTags = tagsService.findOrCreateTags(tags);
         if (loadedTags.isEmpty()) {
             return 0;
         }

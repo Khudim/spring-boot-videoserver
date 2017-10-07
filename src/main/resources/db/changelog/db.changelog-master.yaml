@@ -30,9 +30,6 @@ databaseChangeLog:
               - column:
                   name: height
                   type: int
-              - column:
-                  name: tag_id
-                  type: bigint
 
         - createTable:
             tableName: content

@@ -1,5 +1,6 @@
 package com.khudim.dao.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -27,10 +28,7 @@ public class Video implements Serializable {
     private long contentId;
     private int width;
     private int height;
-    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
-    @JoinTable(name = "video_tags", joinColumns = {
-            @JoinColumn(name = "video_id")}, inverseJoinColumns = {
-            @JoinColumn(name = "tag_id")
-    })
+    @JsonIgnore
+    @ManyToMany(fetch = FetchType.EAGER, mappedBy = "videos", cascade = CascadeType.MERGE)
     private Set<Tags> videoTags = new HashSet<>(0);
 }
