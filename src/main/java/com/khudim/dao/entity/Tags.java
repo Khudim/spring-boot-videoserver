@@ -19,7 +19,6 @@ import java.util.Set;
 public class Tags {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "tag_id")
     private long id;
     private String tag;
     @JsonIgnore

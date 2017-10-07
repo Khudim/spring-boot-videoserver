@@ -8,9 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 
 /**
  * Created by Beaver.
@@ -23,10 +21,6 @@ public class ContentService {
     @Autowired
     public ContentService(ContentRepository contentRepository) {
         this.contentRepository = contentRepository;
-    }
-
-    public boolean isPathExist(Path path) {
-        return contentRepository.countByPath(path.toString()) > 0;
     }
 
     public void save(Content content) {

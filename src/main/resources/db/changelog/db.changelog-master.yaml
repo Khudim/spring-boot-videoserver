@@ -9,7 +9,7 @@ databaseChangeLog:
             tableName: video
             columns:
               - column:
-                  name: video_id
+                  name: id
                   type: bigint
                   autoIncrement: true
                   constraints:
@@ -52,7 +52,7 @@ databaseChangeLog:
             tableName: tags
             columns:
               - column:
-                     name: tag_id
+                     name: id
                      type: bigint
                      autoIncrement: true
                      constraints:
@@ -71,7 +71,7 @@ databaseChangeLog:
                           constraints:
                            primaryKey: true
                            foreignKeyName: fk_video
-                           references: video(video_id)
+                           references: video(id)
                            nullable: false
                     - column:
                           name: tag_id
@@ -79,5 +79,5 @@ databaseChangeLog:
                           constraints:
                            primaryKey: true
                            foreignKeyName: fk_tag
-                           references: tags(tag_id)
+                           references: tags(id)
                            nullable: false

@@ -42,13 +42,13 @@ public class VideoService {
         return videos;
     }
 
-    public List findByTag(List<String> tags, int page, int limit) {
+    public List<Video> findByTag(List<String> tags, int page, int limit) {
         if (tags.isEmpty()) {
             return findAll(page, limit);
         }
         Set<Tags> loadedTags = tagsService.findOrCreateTags(tags);
         if (loadedTags.isEmpty()) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
 
         return videoRepository.findByVideoTags(loadedTags, new PageRequest(page, limit));

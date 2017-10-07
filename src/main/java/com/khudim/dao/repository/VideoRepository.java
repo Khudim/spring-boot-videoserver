@@ -18,10 +18,7 @@ public interface VideoRepository extends JpaRepository<Video, Long>, CrudReposit
 
     Video findFirstByName(String name);
 
-    //  @Query("SELECT v FROM Video v WHERE v.videoTags IN (:tags)")
     List<Video> findByVideoTags(Set<Tags> tags, Pageable pageable);
-
-    // List<Video> findByTagsIgnoreCase(String tag, Pageable pageable);
 
     Long countByVideoTags(Set<Tags> tags);
 }

@@ -21,7 +21,6 @@ import java.util.Set;
 public class Video implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "video_id")
     private long id;
     private String name;
     private long date;
