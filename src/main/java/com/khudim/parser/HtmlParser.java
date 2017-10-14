@@ -44,15 +44,15 @@ import static java.util.stream.IntStream.range;
  */
 @Data
 @Component
-public class HtmlParser {
+public class HtmlParser implements IHtmlParser {
 
-    private final static Logger LOG = LoggerFactory.getLogger(HtmlParser.class);
+    private final static Logger log = LoggerFactory.getLogger(HtmlParser.class);
     private final static String URL = "https://arhivach.org";
     private final static int PAGE_LIMIT = 30;
     private final TagsService tagsService;
     private final VideoService videoService;
     private final ContentService contentService;
-    private ProgressBar progressBar = new ProgressBar();
+    private final ProgressBar progressBar = new ProgressBar();
 
     @Value("${parser.directory}")
     private String directory;
@@ -66,15 +66,22 @@ public class HtmlParser {
 
     @Scheduled(cron = "${parser.cron}")
     public void schedulingDownload() {
-        LOG.debug("Start scheduling download");
+        log.debug("Start scheduling download");
         findVideos();
-        LOG.debug("Stop scheduling download");
+        log.debug("Stop scheduling download");
     }
 
+    @Override
     public void findVideos() {
-        LOG.debug("Start downloadVideo");
-        progressBar = new ProgressBar();
-        Set<ContentInfo> contentInfos = range(0, progressBar.getScanLimit())
+        if (!progressBar.getInProcess().compareAndSet(false, true)) {
+            log.debug("Downloading in progress, can't start new one");
+            return;
+        }
+        log.debug("Start downloadVideo");
+
+        progressBar.reset();
+
+        Set<ContentInfo> contentInfo = range(0, progressBar.getScanLimit())
                 .mapToObj(i -> {
                     progressBar.riseScanProgress();
                     return parseUrlsForPage(URL + generatePageString(i));
@@ -82,17 +89,18 @@ public class HtmlParser {
                 .flatMap(Set::stream)
                 .collect(toSet());
 
-        progressBar.setTotalVideos(contentInfos.size());
+        progressBar.setTotalVideos(contentInfo.size());
 
-        if (contentInfos.size() == 0) {
-            LOG.debug("Total contentInfos == 0");
+        if (contentInfo.size() == 0) {
+            log.debug("Total contentInfo == 0");
             return;
         }
-        contentInfos.forEach(contentInfo -> {
-            downloadVideo(contentInfo);
+        contentInfo.forEach(info -> {
+            downloadVideo(info);
             progressBar.riseDownloadProgress();
         });
-        LOG.debug("Stop downloadVideo");
+        progressBar.getInProcess().set(false);
+        log.debug("Stop downloadVideo");
     }
 
     private Set<ContentInfo> parseUrlsForPage(String pageUrl) {
@@ -145,7 +153,7 @@ public class HtmlParser {
                     .userAgent("NING/1.0")
                     .get();
         } catch (IOException e) {
-            LOG.warn("Can't get document, reason: ", e.getMessage());
+            log.warn("Can't get document, reason: ", e.getMessage());
             if (attemptCount < 5) {
                 sleep();
                 return getConnection(url, ++attemptCount);
@@ -166,7 +174,7 @@ public class HtmlParser {
 
     private boolean downloadFromSrc(String url, String fileName) {
         try {
-            LOG.debug("Start download {}", url);
+            log.debug("Start download {}", url);
             URL imgSrc = new URL(url);
             URLConnection con = imgSrc.openConnection();
             con.setRequestProperty("User-Agent", "NING/1.0");
@@ -174,7 +182,7 @@ public class HtmlParser {
             FileUtils.copyInputStreamToFile(is, new File(fileName));
             return true;
         } catch (IOException e) {
-            LOG.error("Can't download from url: {}", url);
+            log.error("Can't download from url: {}", url);
             return false;
         }
     }
@@ -191,7 +199,6 @@ public class HtmlParser {
             contentService.save(content);
 
             Video video = createVideo(fileName, videoSize, content);
-            prepareTags(info, video);
             videoService.save(video);
             Set<Tags> tags = tagsService.findOrCreateTags(info.getTags());
             video.setVideoTags(tags);
@@ -202,12 +209,8 @@ public class HtmlParser {
             //
         } catch (Exception e) {
             //videoHelper.deleteFile(path);
-            LOG.error("Can't prepare content " + contentPath, e);
+            log.error("Can't prepare content " + contentPath, e);
         }
-    }
-
-    private void prepareTags(ContentInfo info, Video video) {
-
     }
 
     private Video createVideo(String fileName, int[] videoSize, Content content) {

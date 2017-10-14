@@ -4,6 +4,7 @@ import com.khudim.dao.entity.Video;
 import com.khudim.dao.service.ContentService;
 import com.khudim.dao.service.VideoService;
 import com.khudim.parser.HtmlParser;
+import com.khudim.parser.IHtmlParser;
 import com.khudim.utils.ProgressBar;
 import com.khudim.utils.VideoHelper;
 import lombok.Data;
@@ -37,7 +38,7 @@ public class MainController {
     private final ContentService contentService;
     private final VideoService videoService;
     private final VideoHelper videoHelper;
-    private final HtmlParser parser;
+    private final IHtmlParser parser;
     private final ExecutorService executorService;
 
     @Value("${controller.threads}")
