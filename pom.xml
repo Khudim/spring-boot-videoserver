@@ -8,14 +8,12 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>videoserver</name>
+    <name>video-server</name>
     <description>SpringBoot video server</description>
-
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>1.5.4.RELEASE</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <version>2.0.0.M7</version>
     </parent>
 
     <properties>
@@ -25,24 +23,24 @@
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>org.liquibase</groupId>
-            <artifactId>liquibase-core</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-       <!-- <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-        </dependency>-->
+        <!--     <dependency>
+                 <groupId>org.liquibase</groupId>
+                 <artifactId>liquibase-core</artifactId>
+                 <scope>runtime</scope>
+             </dependency>-->
+        <!-- <dependency>
+             <groupId>mysql</groupId>
+             <artifactId>mysql-connector-java</artifactId>
+         </dependency>-->
         <dependency>
             <groupId>postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>9.1-901.jdbc4</version>
         </dependency>
-     <!--  <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-        </dependency>-->
+        <!--  <dependency>
+               <groupId>com.h2database</groupId>
+               <artifactId>h2</artifactId>
+           </dependency>-->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -107,10 +105,19 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.7.0</version>
                 <configuration>
-                    <source>9</source>
-                    <target>9</target>
+                    <source>1.9</source>
+                    <target>1.9</target>
+                    <jdkToolchain>
+                        <version>9</version>
+                    </jdkToolchain>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.0.2</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -123,5 +130,15 @@
         </plugins>
     </build>
 
+    <repositories>
+        <repository>
+            <id>spring-milestones</id>
+            <name>Spring Milestones</name>
+            <url>https://repo.spring.io/libs-milestone</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
 </project>

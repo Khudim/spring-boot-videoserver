@@ -12,25 +12,25 @@ public class ProgressBar {
     private final AtomicBoolean inProcess = new AtomicBoolean(false);
 
     private int scanLimit = 30;
-    private int scanProgress;
+    private double scanProgress;
 
     private int totalVideos;
-    private int downloadProgress;
+    private double downloadProgress;
 
     public void riseScanProgress() {
-        scanProgress = ++scanProgress / scanLimit * 100;
+        scanProgress = (int) (++scanProgress / scanLimit * 100);
     }
 
     public void riseDownloadProgress() {
         if (totalVideos == 0) {
-            scanProgress = 0;
+            downloadProgress = 0;
         } else {
-            scanProgress = (++downloadProgress / totalVideos * 100);
+            downloadProgress = (int) (++downloadProgress / totalVideos * 100);
         }
     }
 
     public void reset() {
-        setScanLimit(0);
+        setScanProgress(0);
         setDownloadProgress(0);
         setTotalVideos(0);
     }

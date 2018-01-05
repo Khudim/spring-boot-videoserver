@@ -93,6 +93,7 @@ public class HtmlParser implements IHtmlParser {
 
         if (contentInfo.size() == 0) {
             log.debug("Total contentInfo == 0");
+            progressBar.getInProcess().set(false);
             return;
         }
         contentInfo.forEach(info -> {
@@ -153,7 +154,7 @@ public class HtmlParser implements IHtmlParser {
                     .userAgent("NING/1.0")
                     .get();
         } catch (IOException e) {
-            log.warn("Can't get document, reason: ", e.getMessage());
+            log.warn("Can't get document, reason: ", e.getCause());
             if (attemptCount < 5) {
                 sleep();
                 return getConnection(url, ++attemptCount);
@@ -202,11 +203,10 @@ public class HtmlParser implements IHtmlParser {
             videoService.save(video);
             Set<Tags> tags = tagsService.findOrCreateTags(info.getTags());
             video.setVideoTags(tags);
-            tags.forEach(t -> {
-                t.addVideo(video);
-                tagsService.save(t);
+            tags.forEach(tag -> {
+                tag.addVideo(video);
+                tagsService.save(tag);
             });
-            //
         } catch (Exception e) {
             //videoHelper.deleteFile(path);
             log.error("Can't prepare content " + contentPath, e);

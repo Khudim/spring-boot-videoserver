@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +31,7 @@ import java.util.concurrent.Executors;
  * Created by Beaver.
  */
 @RestController
+@CrossOrigin
 public class MainController {
 
     private static Logger log = LoggerFactory.getLogger(MainController.class);
@@ -42,7 +42,7 @@ public class MainController {
     private final ExecutorService executorService;
 
     @Value("${controller.threads}")
-    private int threadCount = 2;
+    private int threadCount = 10;
 
     @Autowired
     public MainController(ContentService contentService, VideoService videoService, VideoHelper videoHelper, HtmlParser parser) {
@@ -59,22 +59,19 @@ public class MainController {
     }
 
     @RequestMapping(value = "/progress", method = RequestMethod.GET)
-    public ProgressBar getDownloadProgress(HttpServletResponse response) {
-        response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+    public ProgressBar getDownloadProgress() {
         return parser.getProgressBar();
     }
 
     @RequestMapping(value = "/video", method = RequestMethod.GET)
-    public ResponseContent getVideo(@RequestParam int page, @RequestParam int limit, HttpServletResponse response) {
-        response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+    public ResponseContent getVideo(@RequestParam int page, @RequestParam int limit) {
         long count = videoService.getCount();
         List<Video> videos = videoService.findAll(page, limit);
         return new ResponseContent(count, videos);
     }
 
     @RequestMapping(value = "/video", method = RequestMethod.POST)
-    public ResponseContent getVideo(@RequestParam List<String> tags, @RequestParam int page, @RequestParam int limit, HttpServletResponse response) {
-        response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+    public ResponseContent getVideo(@RequestParam List<String> tags, @RequestParam int page, @RequestParam int limit) {
         long count = videoService.getCount(tags);
         List<Video> videos = videoService.findByTag(tags, page, limit);
         return new ResponseContent(count, videos);

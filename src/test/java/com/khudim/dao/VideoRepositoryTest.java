@@ -7,6 +7,7 @@ import com.khudim.dao.repository.TagsRepository;
 import com.khudim.dao.repository.VideoRepository;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
  * @author hudyshkin.
  */
 @RunWith(SpringRunner.class)
+@Ignore
 @DataJpaTest
 public class VideoRepositoryTest {
 
