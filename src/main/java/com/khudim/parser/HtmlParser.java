@@ -84,7 +84,7 @@ public class HtmlParser implements IHtmlParser {
         Set<ContentInfo> contentInfo = range(0, progressBar.getScanLimit())
                 .mapToObj(i -> {
                     progressBar.riseScanProgress();
-                    return parseUrlsForPage(URL + generatePageString(i));
+                    return parseUrlsForEachPage(URL + generatePageString(i));
                 })
                 .flatMap(Set::stream)
                 .collect(toSet());
@@ -104,7 +104,7 @@ public class HtmlParser implements IHtmlParser {
         log.debug("Stop downloadVideo");
     }
 
-    private Set<ContentInfo> parseUrlsForPage(String pageUrl) {
+    private Set<ContentInfo> parseUrlsForEachPage(String pageUrl) {
         return Stream.ofNullable(getConnection(pageUrl, 0))
                 .flatMap(this::searchUrls)
                 .collect(toSet());
@@ -115,15 +115,18 @@ public class HtmlParser implements IHtmlParser {
                 .getAllElements()
                 .stream()
                 .filter(this::checkElement)
-                .map(element -> new ContentInfo(URL + element.attr("href"), List.of(element.text().toLowerCase().split(" "))));
+                .map(element -> new ContentInfo(URL + element.attr("href"),
+                        List.of(element.text().toLowerCase().split(" "))));
     }
 
     private boolean checkElement(Element element) {
-        return element.text().toLowerCase().contains(VIDEO_TAG) && StringUtils.isNotBlank(element.attr("href"));
+        return element.text().toLowerCase().contains(VIDEO_TAG)
+                && StringUtils.isNotBlank(element.attr("href"));
     }
 
     private void downloadVideo(ContentInfo info) {
-        Stream.ofNullable(getConnection(info.getThreadUrl(), 0)).forEach(document -> downloadByTags(document, info));
+        Stream.ofNullable(getConnection(info.getThreadUrl(), 0))
+                .forEach(document -> downloadByTags(document, info));
     }
 
     private void downloadByTags(Document document, ContentInfo info) {
@@ -133,7 +136,7 @@ public class HtmlParser implements IHtmlParser {
                 .map(element -> element.attr("href"))
                 .filter(this::checkFile)
                 .forEach(src -> {
-                    String filePath = directory + getFileNameFromUrl(src) + "." + VIDEO_TAG;
+                    String filePath = directory + getFileNameFromUrl(src);
                     if (downloadFromSrc(src, filePath)) {
                         addContentToBase(info, Paths.get(filePath), getFileNameFromUrl(src));
                     }
@@ -145,7 +148,7 @@ public class HtmlParser implements IHtmlParser {
     }
 
     private String getFileNameFromUrl(String src) {
-        return src.substring(src.lastIndexOf("/"));
+        return src.substring(src.lastIndexOf("/") + 1);
     }
 
     private Document getConnection(String url, int attemptCount) {
@@ -154,7 +157,7 @@ public class HtmlParser implements IHtmlParser {
                     .userAgent("NING/1.0")
                     .get();
         } catch (IOException e) {
-            log.warn("Can't get document, reason: ", e.getCause());
+            log.warn("Can't get document, reason: ", e.getMessage());
             if (attemptCount < 5) {
                 sleep();
                 return getConnection(url, ++attemptCount);

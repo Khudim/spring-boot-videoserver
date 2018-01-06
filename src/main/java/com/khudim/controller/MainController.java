@@ -35,6 +35,7 @@ import java.util.concurrent.Executors;
 public class MainController {
 
     private static Logger log = LoggerFactory.getLogger(MainController.class);
+
     private final ContentService contentService;
     private final VideoService videoService;
     private final VideoHelper videoHelper;
@@ -63,19 +64,20 @@ public class MainController {
         return parser.getProgressBar();
     }
 
-    @RequestMapping(value = "/video", method = RequestMethod.GET)
-    public ResponseContent getVideo(@RequestParam int page, @RequestParam int limit) {
+    @RequestMapping(value = "/content", method = RequestMethod.GET)
+    public ResponseContent getVideo(@RequestParam(required = false) int page, @RequestParam(required = false) int limit) {
         long count = videoService.getCount();
         List<Video> videos = videoService.findAll(page, limit);
         return new ResponseContent(count, videos);
     }
-
-    @RequestMapping(value = "/video", method = RequestMethod.POST)
+/*
+    @RequestMapping(value = "/content", method = RequestMethod.POST)
     public ResponseContent getVideo(@RequestParam List<String> tags, @RequestParam int page, @RequestParam int limit) {
         long count = videoService.getCount(tags);
         List<Video> videos = videoService.findByTag(tags, page, limit);
         return new ResponseContent(count, videos);
     }
+*/
 
     @RequestMapping(value = "/img/{contentId}", produces = MediaType.IMAGE_JPEG_VALUE)
     public byte[] getImage(@PathVariable long contentId) {

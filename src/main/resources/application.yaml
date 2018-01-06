@@ -11,17 +11,15 @@ controller:
      threads: 10
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/spring_boot_test
+    url: jdbc:postgresql://localhost:5432/contentdb
     username: postgres
     password: smeni321
   jpa:
     show-sql: false
-    #url: ${DATABASE_URL}
-    #url: jdbc:mysql://localhost:3306/spring_boot_test
 scanner:
    cron: '0 0 0 */3 * ?'
-   directory: E:\\video
-   tmpDir: E:\\tmp
+   directory: E:\\video\\
+   tmpDir: E:\\tmp\\
 
 video:
    imageEncoderCmd: ffmpeg -ss 00:00:01 -i <image> -vframes 1 -q:v 31 <file> -y
