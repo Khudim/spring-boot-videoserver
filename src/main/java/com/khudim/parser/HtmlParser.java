@@ -21,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.io.IOException;
@@ -191,8 +190,7 @@ public class HtmlParser implements IHtmlParser {
         }
     }
 
-    @Transactional(rollbackFor = Exception.class)
-    public void addContentToBase(ContentInfo info, Path contentPath, String fileName) {
+    private void addContentToBase(ContentInfo info, Path contentPath, String fileName) {
         try {
             byte[] image = VideoHelper.getImageFromVideo(contentPath);
             int[] videoSize = VideoHelper.getVideoSize(contentPath);

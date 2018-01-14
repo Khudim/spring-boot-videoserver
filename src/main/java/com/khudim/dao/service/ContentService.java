@@ -32,7 +32,11 @@ public class ContentService {
         if (StringUtils.isBlank(path) || !Files.exists(Paths.get(path))) {
             throw new NoSuchFileException("No such file " + path);
         }
-        return contentRepository.findPathById(contentId);
+        return path;
+    }
+
+    public Content getContent(long contentId) {
+        return contentRepository.findById(contentId).orElseGet(null);
     }
 
     public byte[] getImage(long contentId) {

@@ -13,7 +13,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.HashSet;
@@ -21,6 +20,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static org.springframework.data.domain.PageRequest.of;
 
 /**
  * @author hudyshkin.
@@ -72,7 +73,7 @@ public class VideoRepositoryTest {
     @Test
     public void shouldFindByTags() {
         Set<Tags> tags = List.of(".webm", "fap", "test2").stream().map(tag -> tagsRepository.findFirstByTag(tag)).filter(Objects::nonNull).collect(Collectors.toSet());
-        List<Video> videos = videoRepository.findByVideoTags(tags, new PageRequest(0, 2));
+        List<Video> videos = videoRepository.findByVideoTags(tags, of(0, 2));
         Assert.assertEquals(2, videos.size());
     }
 

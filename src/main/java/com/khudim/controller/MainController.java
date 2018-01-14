@@ -1,10 +1,12 @@
 package com.khudim.controller;
 
+import com.khudim.dao.entity.Content;
 import com.khudim.dao.entity.Video;
 import com.khudim.dao.service.ContentService;
 import com.khudim.dao.service.VideoService;
 import com.khudim.parser.HtmlParser;
 import com.khudim.parser.IHtmlParser;
+import com.khudim.storage.IFileStorage;
 import com.khudim.utils.ProgressBar;
 import com.khudim.utils.VideoHelper;
 import lombok.Data;
@@ -38,19 +40,20 @@ public class MainController {
 
     private final ContentService contentService;
     private final VideoService videoService;
-    private final VideoHelper videoHelper;
     private final IHtmlParser parser;
     private final ExecutorService executorService;
+
+    private List<IFileStorage> fileStorages;
 
     @Value("${controller.threads}")
     private int threadCount = 10;
 
     @Autowired
-    public MainController(ContentService contentService, VideoService videoService, VideoHelper videoHelper, HtmlParser parser) {
+    public MainController(ContentService contentService, VideoService videoService, HtmlParser parser, List<IFileStorage> fileStorages) {
         this.contentService = contentService;
         this.videoService = videoService;
-        this.videoHelper = videoHelper;
         this.parser = parser;
+        this.fileStorages = fileStorages;
         this.executorService = Executors.newFixedThreadPool(threadCount);
     }
 
@@ -96,12 +99,40 @@ public class MainController {
                 bytes = Files.readAllBytes(Paths.get(filePath));
                 status = HttpStatus.OK;
             } else {
-                bytes = videoHelper.getRangeBytesFromVideo(filePath, range, response);
+                bytes = VideoHelper.getRangeBytesFromVideo(filePath, range, response);
                 status = HttpStatus.PARTIAL_CONTENT;
             }
             response.setContentType("video/webm");
             response.setContentLength(bytes.length);
         } catch (IOException e) {
+            log.error("Can't get range bytes from video, reason: ", e);
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+        }
+        return new ResponseEntity<>(bytes, status);
+    }
+
+    @RequestMapping(value = "/video/{contentId}", method = RequestMethod.GET)
+    public ResponseEntity<byte[]> downloadVideo(@PathVariable long contentId,
+                                                HttpServletResponse response,
+                                                @RequestHeader(required = false) String range) {
+        HttpStatus status;
+        byte[] bytes = new byte[0];
+        try {
+            Content content = contentService.getContent(contentId);
+            IFileStorage fileStorage = fileStorages.stream()
+                    .filter(storage -> storage.storageName().equals(content.getStorage()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (fileStorage == null) {
+                status = HttpStatus.NOT_FOUND;
+            } else {
+                bytes = fileStorage.downloadFile(content.getPath(), VideoHelper.parseRanges(range));
+                status = HttpStatus.PARTIAL_CONTENT;
+                response.setContentType("video/webm");
+                response.setContentLength(bytes.length);
+            }
+        } catch (Exception e) {
             log.error("Can't get range bytes from video, reason: ", e);
             status = HttpStatus.INTERNAL_SERVER_ERROR;
         }

@@ -29,3 +29,8 @@ parser:
    cron: '0 0 0 */3 * ?'
    directory: ${scanner.directory}
 
+dropBox:
+   token: ""
+   identifier: "video-server"
+   max_cash_size: 400
+

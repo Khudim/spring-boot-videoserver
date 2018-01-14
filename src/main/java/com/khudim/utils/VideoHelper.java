@@ -33,11 +33,11 @@ public class VideoHelper {
     @Value("${scanner.tmpDir}")
     private String tmpDir = "/tmp";
 
-    public byte[] getRangeBytesFromVideo(String filePath, String range, HttpServletResponse response) throws IOException {
+    public static byte[] getRangeBytesFromVideo(String filePath, String range, HttpServletResponse response) throws IOException {
         File file = new File(filePath);
         long fileLength = file.length();
 
-        String[] ranges = parseRanges(range, fileLength);
+        String[] ranges = parseRanges(range);
         int start = Integer.parseInt(ranges[0]);
         int stop = Integer.parseInt(ranges[1]);
 
@@ -52,19 +52,13 @@ public class VideoHelper {
         return bytes;
     }
 
-    private String[] parseRanges(String range, long fileLength) {
+    public static String[] parseRanges(String range) {
         String[] ranges = range.split("=")[1].split("-");
 
         if (ranges.length < 2) {
             String start = ranges[0];
-            String stop = String.valueOf(fileLength - 1);
+            String stop = "-1";
             ranges = new String[]{start, stop};
-        }
-        long stop = Long.parseLong(ranges[1]);
-
-        if (stop > fileLength) {
-            stop = fileLength - 1;
-            ranges[1] = String.valueOf(stop);
         }
         return ranges;
     }
@@ -144,5 +138,9 @@ public class VideoHelper {
         } catch (IOException e) {
             log.error("Can't delete file: {}", e);
         }
+    }
+
+    public static String getNameFromPath(String filePath) {
+        return filePath.substring(filePath.lastIndexOf("/") + 1);
     }
 }

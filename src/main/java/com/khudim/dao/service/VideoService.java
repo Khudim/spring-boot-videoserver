@@ -4,12 +4,13 @@ import com.khudim.dao.entity.Tags;
 import com.khudim.dao.entity.Video;
 import com.khudim.dao.repository.VideoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+
+import static org.springframework.data.domain.PageRequest.of;
 
 /**
  * Created by Beaver.
@@ -35,11 +36,7 @@ public class VideoService {
     }
 
     public List<Video> findAll(int page, int limit) {
-        List<Video> videos = videoRepository.findAll(new PageRequest(page, limit)).getContent();
-        if (videos == null) {
-            videos = Collections.emptyList();
-        }
-        return videos;
+        return videoRepository.findAll(of(page, limit)).getContent();
     }
 
     public List<Video> findByTag(List<String> tags, int page, int limit) {
@@ -51,7 +48,7 @@ public class VideoService {
             return Collections.emptyList();
         }
 
-        return videoRepository.findByVideoTags(loadedTags, new PageRequest(page, limit));
+        return videoRepository.findByVideoTags(loadedTags, of(page, limit));
     }
 
     public long getCount() {
