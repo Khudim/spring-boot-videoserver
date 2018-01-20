@@ -48,6 +48,7 @@ public class HtmlParser implements IHtmlParser {
     private final static Logger log = LoggerFactory.getLogger(HtmlParser.class);
     private final static String URL = "https://arhivach.org";
     private final static int PAGE_LIMIT = 30;
+
     private final TagsService tagsService;
     private final VideoService videoService;
     private final ContentService contentService;

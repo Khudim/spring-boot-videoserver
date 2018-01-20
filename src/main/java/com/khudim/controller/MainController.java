@@ -120,7 +120,7 @@ public class MainController {
         try {
             Content content = contentService.getContent(contentId);
             IFileStorage fileStorage = fileStorages.stream()
-                    .filter(storage -> storage.storageName().equals(content.getStorage()))
+                    .filter(storage -> storage.getStorageName().equals(content.getStorage()))
                     .findFirst()
                     .orElse(null);
 

@@ -30,7 +30,7 @@ parser:
    directory: ${scanner.directory}
 
 dropBox:
-   token: ""
+   token: "7_qqzy3_t7AAAAAAAAAAHQAxzwUVbFFcwOWfcSnn-5P4Wa5J0o_Caxd5blXsWalw"
    identifier: "video-server"
    max_cash_size: 400
 
