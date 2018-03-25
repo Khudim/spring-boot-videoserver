@@ -35,7 +35,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static com.khudim.utils.Utilities.sleep;
-import static com.khudim.utils.VideoHelper.VIDEO_TAG;
+import static com.khudim.utils.VideoConstants.ALLOWED_VIDEO_TYPES;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.IntStream.range;
 
@@ -49,6 +49,7 @@ public class HtmlParser implements IHtmlParser {
     private final static Logger log = LoggerFactory.getLogger(HtmlParser.class);
     private final static String URL = "https://arhivach.org";
     private final static int PAGE_LIMIT = 30;
+
     private final TagsService tagsService;
     private final VideoService videoService;
     private final ContentService contentService;
@@ -115,13 +116,24 @@ public class HtmlParser implements IHtmlParser {
                 .getAllElements()
                 .stream()
                 .filter(this::checkElement)
-                .map(element -> new ContentInfo(URL + element.attr("href"),
-                        List.of(element.text().toLowerCase().split(" "))));
+                .map(element ->
+                        new ContentInfo(URL + element.attr("href"),
+                                List.of(element.text().toLowerCase().split(" "))
+                        )
+                );
     }
 
     private boolean checkElement(Element element) {
-        return element.text().toLowerCase().contains(VIDEO_TAG)
-                && StringUtils.isNotBlank(element.attr("href"));
+        return isVideoElement(element) && StringUtils.isNotBlank(element.attr("href"));
+    }
+
+    private boolean isVideoElement(Element element) {
+        for (String videoType : ALLOWED_VIDEO_TYPES) {
+            if (element.text().toLowerCase().contains(videoType)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void downloadVideo(ContentInfo info) {
@@ -144,7 +156,9 @@ public class HtmlParser implements IHtmlParser {
     }
 
     private boolean checkFile(String src) {
-        return src.endsWith("." + VIDEO_TAG) && !videoService.isRepeated(getFileNameFromUrl(src));
+        String fileExtension = src.substring(src.lastIndexOf(".") + 1, src.length());
+        return ALLOWED_VIDEO_TYPES.contains(fileExtension)
+                && !videoService.isRepeated(getFileNameFromUrl(src));
     }
 
     private String getFileNameFromUrl(String src) {

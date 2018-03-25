@@ -35,11 +35,7 @@ public class VideoService {
     }
 
     public List<Video> findAll(int page, int limit) {
-        List<Video> videos = videoRepository.findAll(new PageRequest(page, limit)).getContent();
-        if (videos == null) {
-            videos = Collections.emptyList();
-        }
-        return videos;
+        return videoRepository.findAll(PageRequest.of(page, limit)).getContent();
     }
 
     public List<Video> findByTag(List<String> tags, int page, int limit) {
@@ -51,7 +47,7 @@ public class VideoService {
             return Collections.emptyList();
         }
 
-        return videoRepository.findByVideoTags(loadedTags, new PageRequest(page, limit));
+        return videoRepository.findByVideoTags(loadedTags, PageRequest.of(page, limit));
     }
 
     public long getCount() {

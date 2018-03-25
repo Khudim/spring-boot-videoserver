@@ -13,7 +13,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/contentdb
     username: postgres
-    password: smeni321
+    password: password
   jpa:
     show-sql: false
 scanner:
