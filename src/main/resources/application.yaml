@@ -13,13 +13,13 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/contentdb
     username: postgres
-    password: smeni321
+    password: password
   jpa:
     show-sql: false
 scanner:
    cron: '0 0 0 */3 * ?'
-   directory: E:\\video\\
-   tmpDir: E:\\tmp\\
+   directory: F:\\video\\
+   tmpDir: F:\\tmp\\
 
 video:
    imageEncoderCmd: ffmpeg -ss 00:00:01 -i <image> -vframes 1 -q:v 31 <file> -y
@@ -30,7 +30,7 @@ parser:
    directory: ${scanner.directory}
 
 dropBox:
-   token: "7_qqzy3_t7AAAAAAAAAAHQAxzwUVbFFcwOWfcSnn-5P4Wa5J0o_Caxd5blXsWalw"
+   token: "7_qqzy3_t7AAAAAAAAAAKsqzNt35GZ1f4N2NEJKn0ByNo0oKpGjGtnhoXlx2lBk8"
    identifier: "video-server"
    max_cash_size: 400
 

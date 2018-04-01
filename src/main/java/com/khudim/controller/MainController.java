@@ -10,7 +10,6 @@ import com.khudim.storage.IFileStorage;
 import com.khudim.utils.ProgressBar;
 import com.khudim.utils.VideoHelper;
 import lombok.Data;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,9 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.NoSuchFileException;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -43,7 +40,7 @@ public class MainController {
     private final IHtmlParser parser;
     private final ExecutorService executorService;
 
-    private List<IFileStorage> fileStorages;
+    private final List<IFileStorage> fileStorages;
 
     @Value("${controller.threads}")
     private int threadCount = 10;
@@ -81,34 +78,9 @@ public class MainController {
         return new ResponseContent(count, videos);
     }
 */
-
     @RequestMapping(value = "/img/{contentId}", produces = MediaType.IMAGE_JPEG_VALUE)
     public byte[] getImage(@PathVariable long contentId) {
         return contentService.getImage(contentId);
-    }
-
-    @RequestMapping(value = "/video/{contentId}", method = RequestMethod.GET)
-    public ResponseEntity<byte[]> getVideo(@PathVariable long contentId,
-                                           HttpServletResponse response,
-                                           @RequestHeader(required = false) String range) {
-        HttpStatus status;
-        byte[] bytes = new byte[0];
-        try {
-            String filePath = contentService.getVideoPath(contentId);
-            if (StringUtils.isBlank(range)) {
-                bytes = Files.readAllBytes(Paths.get(filePath));
-                status = HttpStatus.OK;
-            } else {
-                bytes = VideoHelper.getRangeBytesFromVideo(filePath, range, response);
-                status = HttpStatus.PARTIAL_CONTENT;
-            }
-            response.setContentType("video/webm");
-            response.setContentLength(bytes.length);
-        } catch (IOException e) {
-            log.error("Can't get range bytes from video, reason: ", e);
-            status = HttpStatus.INTERNAL_SERVER_ERROR;
-        }
-        return new ResponseEntity<>(bytes, status);
     }
 
     @RequestMapping(value = "/video/{contentId}", method = RequestMethod.GET)
@@ -122,16 +94,14 @@ public class MainController {
             IFileStorage fileStorage = fileStorages.stream()
                     .filter(storage -> storage.getStorageName().equals(content.getStorage()))
                     .findFirst()
-                    .orElse(null);
+                    .orElseThrow(Exception::new);
 
-            if (fileStorage == null) {
-                status = HttpStatus.NOT_FOUND;
-            } else {
-                bytes = fileStorage.downloadFile(content.getPath(), VideoHelper.parseRanges(range));
-                status = HttpStatus.PARTIAL_CONTENT;
-                response.setContentType("video/webm");
-                response.setContentLength(bytes.length);
-            }
+            bytes = fileStorage.downloadFile(content.getPath(), VideoHelper.parseRanges(range));
+            status = HttpStatus.PARTIAL_CONTENT;
+            response.setContentType("video/webm");
+            response.setContentLength(bytes.length);
+        } catch (NoSuchFileException e) {
+            status = HttpStatus.NOT_FOUND;
         } catch (Exception e) {
             log.error("Can't get range bytes from video, reason: ", e);
             status = HttpStatus.INTERNAL_SERVER_ERROR;

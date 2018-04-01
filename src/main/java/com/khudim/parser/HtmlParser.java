@@ -6,6 +6,7 @@ import com.khudim.dao.entity.Video;
 import com.khudim.dao.service.ContentService;
 import com.khudim.dao.service.TagsService;
 import com.khudim.dao.service.VideoService;
+import com.khudim.storage.IFileStorage;
 import com.khudim.utils.ProgressBar;
 import com.khudim.utils.VideoHelper;
 import lombok.AllArgsConstructor;
@@ -53,15 +54,17 @@ public class HtmlParser implements IHtmlParser {
     private final VideoService videoService;
     private final ContentService contentService;
     private final ProgressBar progressBar = new ProgressBar();
+    private final List<IFileStorage> fileStorages;
 
     @Value("${parser.directory}")
     private String directory;
 
     @Autowired
-    public HtmlParser(VideoService videoService, ContentService contentService, TagsService tagsService) {
+    public HtmlParser(VideoService videoService, ContentService contentService, TagsService tagsService, List<IFileStorage> fileStorages) {
         this.videoService = videoService;
         this.contentService = contentService;
         this.tagsService = tagsService;
+        this.fileStorages = fileStorages;
     }
 
     @Scheduled(cron = "${parser.cron}")

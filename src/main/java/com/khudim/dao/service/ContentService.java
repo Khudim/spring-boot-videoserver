@@ -2,13 +2,10 @@ package com.khudim.dao.service;
 
 import com.khudim.dao.entity.Content;
 import com.khudim.dao.repository.ContentRepository;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
-import java.nio.file.Paths;
 
 /**
  * Created by Beaver.
@@ -27,16 +24,9 @@ public class ContentService {
         contentRepository.save(content);
     }
 
-    public String getVideoPath(long contentId) throws NoSuchFileException {
-        String path = contentRepository.findPathById(contentId);
-        if (StringUtils.isBlank(path) || !Files.exists(Paths.get(path))) {
-            throw new NoSuchFileException("No such file " + path);
-        }
-        return path;
-    }
-
-    public Content getContent(long contentId) {
-        return contentRepository.findById(contentId).orElseGet(null);
+    public Content getContent(long contentId) throws NoSuchFileException {
+        return contentRepository.findById(contentId)
+                .orElseThrow(() -> new NoSuchFileException("Can't find content with id = " + contentId));
     }
 
     public byte[] getImage(long contentId) {

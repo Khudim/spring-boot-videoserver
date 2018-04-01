@@ -36,7 +36,9 @@ public class VideoService {
     }
 
     public List<Video> findAll(int page, int limit) {
-        return videoRepository.findAll(of(page, limit)).getContent();
+        return videoRepository.findAll(
+                of(page, limit)
+        ).getContent();
     }
 
     public List<Video> findByTag(List<String> tags, int page, int limit) {

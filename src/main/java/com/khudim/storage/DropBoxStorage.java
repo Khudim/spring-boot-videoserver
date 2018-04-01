@@ -1,6 +1,7 @@
 package com.khudim.storage;
 
 import com.dropbox.core.DbxDownloader;
+import com.dropbox.core.DbxException;
 import com.dropbox.core.DbxRequestConfig;
 import com.dropbox.core.v2.DbxClientV2;
 import com.dropbox.core.v2.files.FileMetadata;
@@ -53,21 +54,27 @@ public class DropBoxStorage implements IFileStorage {
         try {
             int offset = toInt(ranges[0]);
             int limit = toInt(ranges[1]);
-            DbxDownloader<FileMetadata> metaInfo = CASH.get(fileName);
-            if (metaInfo == null) {
-                if (CASH.size() > MAX_CASH_SIZE) {
-                    service.execute(this::clearCash);
-                }
-                metaInfo = client.files().download(fileName);
-                CASH.put(fileName, metaInfo);
-            }
             byte[] bytes = new byte[limit - offset + 1];
+
+            DbxDownloader<FileMetadata> metaInfo = findMeta(fileName);
             metaInfo.getInputStream().readNBytes(bytes, offset, limit);
             return bytes;
         } catch (Exception e) {
-            log.error("Can't download file from {} storage, reason: {}", storageName, e.getMessage());
+            log.error("Can't download file from {} storage, reason: {}", storageName, e);
             return new byte[0];
         }
+    }
+
+    private DbxDownloader<FileMetadata> findMeta(String fileName) throws DbxException {
+        DbxDownloader<FileMetadata> metaInfo = CASH.get(fileName);
+        if (metaInfo == null) {
+            if (CASH.size() > MAX_CASH_SIZE) {
+                service.execute(this::clearCash);
+            }
+            metaInfo = client.files().download("/" + fileName);
+            CASH.put(fileName, metaInfo);
+        }
+        return metaInfo;
     }
 
     private void clearCash() {
@@ -78,7 +85,7 @@ public class DropBoxStorage implements IFileStorage {
     public boolean uploadFile(String file) {
         try (InputStream in = new FileInputStream(file)) {
             client.files()
-                    .uploadBuilder(VideoHelper.getNameFromPath(file))
+                    .uploadBuilder("/" + VideoHelper.getNameFromPath(file))
                     .uploadAndFinish(in);
             return true;
         } catch (Exception e) {
