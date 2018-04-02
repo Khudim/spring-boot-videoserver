@@ -47,6 +47,12 @@ databaseChangeLog:
               - column:
                   name: path
                   type: varchar(255)
+              - column:
+                  name: length
+                  type: bigint
+              - column:
+                  name: storage
+                  type: varchar
 
         - createTable:
             tableName: tags
