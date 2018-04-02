@@ -31,7 +31,7 @@ public class DropBoxStorage implements IFileStorage {
 
     private final ExecutorService service = Executors.newSingleThreadExecutor();
 
-    private String storageName = "DropBox";
+    private StorageType storageType = StorageType.DROP_BOX;
 
     @Value("dropBox.max_cash_size")
     private final static int MAX_CASH_SIZE = 300;
@@ -50,6 +50,17 @@ public class DropBoxStorage implements IFileStorage {
     }
 
     @Override
+    public byte[] downloadFile(String fileName) {
+        try {
+            DbxDownloader<FileMetadata> metaInfo = findMeta(fileName);
+            return metaInfo.getInputStream().readAllBytes();
+        } catch (Exception e) {
+            log.error("Can't download file from {} storage, reason: {}", storageType, e);
+            return new byte[0];
+        }
+    }
+
+    @Override
     public byte[] downloadFile(String fileName, String[] ranges) {
         try {
             int offset = toInt(ranges[0]);
@@ -60,7 +71,7 @@ public class DropBoxStorage implements IFileStorage {
             metaInfo.getInputStream().readNBytes(bytes, offset, limit);
             return bytes;
         } catch (Exception e) {
-            log.error("Can't download file from {} storage, reason: {}", storageName, e);
+            log.error("Can't download file from {} storage, reason: {}", storageType, e);
             return new byte[0];
         }
     }
@@ -89,7 +100,7 @@ public class DropBoxStorage implements IFileStorage {
                     .uploadAndFinish(in);
             return true;
         } catch (Exception e) {
-            log.error("Can't upload file to {} storage, reason: {}", storageName, e.getMessage());
+            log.error("Can't upload file to {} storage, reason: {}", storageType, e.getMessage());
             return false;
         }
     }

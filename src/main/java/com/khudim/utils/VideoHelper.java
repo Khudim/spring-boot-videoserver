@@ -1,6 +1,7 @@
 package com.khudim.utils;
 
 import lombok.Data;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -8,10 +9,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.stringtemplate.v4.ST;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
 
 import static org.apache.commons.lang.math.NumberUtils.toInt;
@@ -33,25 +33,6 @@ public class VideoHelper {
     @Value("${scanner.tmpDir}")
     private String tmpDir = "/tmp";
 
-    public static byte[] getRangeBytesFromVideo(String filePath, String range, HttpServletResponse response) throws IOException {
-        File file = new File(filePath);
-        long fileLength = file.length();
-
-        String[] ranges = parseRanges(range);
-        int start = Integer.parseInt(ranges[0]);
-        int stop = Integer.parseInt(ranges[1]);
-
-        response.setHeader("Accept-Ranges", "bytes");
-        response.setHeader("Content-Range", "bytes " + start + "-" + stop + "/" + fileLength);
-
-        byte[] bytes = new byte[stop - start + 1];
-        try (RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw")) {
-            randomAccessFile.seek(start);
-            randomAccessFile.readFully(bytes, 0, stop - start);
-        }
-        return bytes;
-    }
-
     public static String[] parseRanges(String range) {
         String[] ranges = range.split("=")[1].split("-");
 
@@ -63,15 +44,12 @@ public class VideoHelper {
         return ranges;
     }
 
-    public static int[] getVideoSize(Path path) throws IOException, InterruptedException {
+    public static int[] getVideoSize(String path) throws IOException, InterruptedException {
         int width;
         int height;
         Process pb = null;
         try {
-            pb = new ProcessBuilder(createVideoSizeCmd(path)
-                    .render()
-                    .split(" "))
-                    .start();
+            pb = new ProcessBuilder(createVideoSizeCmd(path)).start();
             pb.waitFor(10, TimeUnit.SECONDS);
 
             String[] output = readOutput(pb.getInputStream());
@@ -94,7 +72,7 @@ public class VideoHelper {
         }
     }
 
-    public static byte[] getImageFromVideo(Path path) {
+    public static byte[] getImageFromVideo(String path) {
         File tempFile = null;
         Process process = null;
         ST template = new ST(imageEncoderCmd);
@@ -107,7 +85,7 @@ public class VideoHelper {
             process.waitFor(20, TimeUnit.SECONDS);
 
             if (tempFile.length() == 0) {
-                log.debug("Can't get image from file " + path.getFileName());
+                log.debug("Can't get image from file " + Paths.get(path).getFileName());
                 return new byte[0];
             }
             return Files.readAllBytes(tempFile.toPath());
@@ -117,27 +95,12 @@ public class VideoHelper {
             if (process != null) {
                 process.destroy();
             }
-            if (tempFile != null) {
-                deleteFile(tempFile.toPath());
-            }
+            FileUtils.deleteQuietly(tempFile);
         }
     }
 
-    private static ST createVideoSizeCmd(Path path) {
-        ST template = new ST(videoSizeCmd);
-        template.add("video", path.toString());
-        template.render();
-        return template;
-    }
-
-    private static void deleteFile(Path tempFile) {
-        try {
-            if (tempFile != null) {
-                Files.delete(tempFile);
-            }
-        } catch (IOException e) {
-            log.error("Can't delete file: {}", e);
-        }
+    private static String[] createVideoSizeCmd(String path) {
+        return new ST(videoSizeCmd).add("video", path).render().split(" ");
     }
 
     public static String getNameFromPath(String filePath) {

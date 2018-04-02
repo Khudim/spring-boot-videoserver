@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class GoogleDriveStorage implements IFileStorage {
 
-    private String storageName = "GoogleDrive";
+    private StorageType storageType = StorageType.GOOGLE_DRIVE;
 
     @Value("dropBox.token")
     private String accessToken;
@@ -25,7 +25,17 @@ public class GoogleDriveStorage implements IFileStorage {
     }
 
     @Override
-    public byte[] downloadFile(String fileName, String[] ranges) throws Exception {
+    public byte[] downloadFile(String fileName) {
         return new byte[0];
+    }
+
+    @Override
+    public byte[] downloadFile(String fileName, String[] ranges) {
+        return new byte[0];
+    }
+
+    @Override
+    public boolean uploadFile(String file) {
+        return false;
     }
 }

@@ -17,5 +17,6 @@ public class Content implements Serializable {
     private long id;
     private byte[] image;
     private String path;
+    private long length;
     private String storage;
 }

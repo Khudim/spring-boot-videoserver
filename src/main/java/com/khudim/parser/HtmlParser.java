@@ -6,7 +6,9 @@ import com.khudim.dao.entity.Video;
 import com.khudim.dao.service.ContentService;
 import com.khudim.dao.service.TagsService;
 import com.khudim.dao.service.VideoService;
+import com.khudim.storage.DropBoxStorage;
 import com.khudim.storage.IFileStorage;
+import com.khudim.storage.StorageType;
 import com.khudim.utils.ProgressBar;
 import com.khudim.utils.VideoHelper;
 import lombok.AllArgsConstructor;
@@ -28,8 +30,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -54,17 +54,17 @@ public class HtmlParser implements IHtmlParser {
     private final VideoService videoService;
     private final ContentService contentService;
     private final ProgressBar progressBar = new ProgressBar();
-    private final List<IFileStorage> fileStorages;
+    private final IFileStorage fileStorage;
 
     @Value("${parser.directory}")
     private String directory;
 
     @Autowired
-    public HtmlParser(VideoService videoService, ContentService contentService, TagsService tagsService, List<IFileStorage> fileStorages) {
+    public HtmlParser(VideoService videoService, ContentService contentService, TagsService tagsService, DropBoxStorage dropBoxStorage) {
         this.videoService = videoService;
         this.contentService = contentService;
         this.tagsService = tagsService;
-        this.fileStorages = fileStorages;
+        fileStorage = dropBoxStorage;
     }
 
     @Scheduled(cron = "${parser.cron}")
@@ -140,8 +140,12 @@ public class HtmlParser implements IHtmlParser {
                 .filter(this::checkFile)
                 .forEach(src -> {
                     String filePath = directory + getFileNameFromUrl(src);
+                    StorageType storageType = fileStorage.getStorageType();
                     if (downloadFromSrc(src, filePath)) {
-                        addContentToBase(info, Paths.get(filePath), getFileNameFromUrl(src));
+                        if (storageType != StorageType.LOCAL_STORAGE) {
+                            fileStorage.uploadFile(filePath);
+                        }
+                        addContentToBase(info, filePath, getFileNameFromUrl(src), storageType);
                     }
                 });
     }
@@ -194,14 +198,16 @@ public class HtmlParser implements IHtmlParser {
         }
     }
 
-    private void addContentToBase(ContentInfo info, Path contentPath, String fileName) {
+    private void addContentToBase(ContentInfo info, String contentPath, String fileName, StorageType storageType) {
         try {
             byte[] image = VideoHelper.getImageFromVideo(contentPath);
             int[] videoSize = VideoHelper.getVideoSize(contentPath);
 
             Content content = new Content();
-            content.setPath(contentPath.toString());
+            content.setPath(contentPath);
             content.setImage(image);
+            content.setStorage(storageType.name());
+            content.setLength(new File(contentPath).length());
             contentService.save(content);
 
             Video video = createVideo(fileName, videoSize, content);
@@ -213,8 +219,11 @@ public class HtmlParser implements IHtmlParser {
                 tagsService.save(tag);
             });
         } catch (Exception e) {
-            //videoHelper.deleteFile(path);
             log.error("Can't prepare content " + contentPath, e);
+        } finally {
+            if (storageType != StorageType.LOCAL_STORAGE) {
+                FileUtils.deleteQuietly(new File(contentPath));
+            }
         }
     }
 

@@ -2,7 +2,11 @@ package com.khudim.storage;
 
 public interface IFileStorage {
 
-    byte[] downloadFile(String fileName, String[] ranges) throws Exception;
+    byte[] downloadFile(String fileName);
 
-    String getStorageName();
+    byte[] downloadFile(String fileName, String[] ranges);
+
+    boolean uploadFile(String file);
+
+    StorageType getStorageType();
 }
