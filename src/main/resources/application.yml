@@ -8,7 +8,7 @@ server:
   port: ${PORT:80}
 
 controller:
-     threads: 10
+    threads: 20
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/contentdb
@@ -29,8 +29,8 @@ parser:
    cron: '0 0 0 */3 * ?'
    directory: ${scanner.directory}
 
-dropBox:
-   token: "7_qqzy3_t7AAAAAAAAAAKsqzNt35GZ1f4N2NEJKn0ByNo0oKpGjGtnhoXlx2lBk8"
-   identifier: "video-server"
-   max_cash_size: 400
+drop-box:
+    accessToken: "7_qqzy3_t7AAAAAAAAAAKsqzNt35GZ1f4N2NEJKn0ByNo0oKpGjGtnhoXlx2lBk8"
+    clientIdentifier: "video-server"
+    maxCashSize: 400
 

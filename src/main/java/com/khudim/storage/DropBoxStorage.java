@@ -10,9 +10,10 @@ import com.khudim.utils.VideoHelper;
 import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Map;
@@ -20,10 +21,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static com.khudim.storage.StorageType.DROP_BOX;
 import static org.apache.commons.lang.math.NumberUtils.toInt;
 
 @Component
 @Data
+@ConfigurationProperties(prefix = "drop-box")
 public class DropBoxStorage implements IFileStorage {
 
     private final static Logger log = LoggerFactory.getLogger(HtmlParser.class);
@@ -31,20 +34,14 @@ public class DropBoxStorage implements IFileStorage {
 
     private final ExecutorService service = Executors.newSingleThreadExecutor();
 
-    private StorageType storageType = StorageType.DROP_BOX;
-
-    @Value("dropBox.max_cash_size")
-    private final static int MAX_CASH_SIZE = 300;
-
-    @Value("dropBox.token")
+    private StorageType storageType = DROP_BOX;
+    private int maxCashSize = 300;
     private String accessToken;
-
-    @Value("dropBox.identifier")
     private String clientIdentifier;
-
     private DbxClientV2 client;
 
-    public DropBoxStorage() {
+    @PostConstruct
+    public void init() {
         DbxRequestConfig config = new DbxRequestConfig(clientIdentifier);
         client = new DbxClientV2(config, accessToken);
     }
@@ -79,7 +76,7 @@ public class DropBoxStorage implements IFileStorage {
     private DbxDownloader<FileMetadata> findMeta(String fileName) throws DbxException {
         DbxDownloader<FileMetadata> metaInfo = CASH.get(fileName);
         if (metaInfo == null) {
-            if (CASH.size() > MAX_CASH_SIZE) {
+            if (CASH.size() > maxCashSize) {
                 service.execute(this::clearCash);
             }
             metaInfo = client.files().download("/" + fileName);

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.PostConstruct;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -19,11 +20,15 @@ public class JobController {
     private int threadCount = 10;
 
     private final IHtmlParser parser;
-    private final ExecutorService executorService;
+    private ExecutorService executorService;
 
     @Autowired
     public JobController(IHtmlParser parser) {
         this.parser = parser;
+    }
+
+    @PostConstruct
+    public void init() {
         this.executorService = Executors.newFixedThreadPool(threadCount);
     }
 
