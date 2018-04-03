@@ -10,6 +10,7 @@ import com.khudim.utils.VideoHelper;
 import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -26,6 +27,7 @@ import static org.apache.commons.lang.math.NumberUtils.toInt;
 
 @Component
 @Data
+@ConditionalOnProperty(prefix = "drop-box", value = "accessToken")
 @ConfigurationProperties(prefix = "drop-box")
 public class DropBoxStorage implements IFileStorage {
 
@@ -49,7 +51,7 @@ public class DropBoxStorage implements IFileStorage {
     @Override
     public byte[] downloadFile(String fileName) {
         try {
-            DbxDownloader<FileMetadata> metaInfo = findMeta(fileName);
+            DbxDownloader<FileMetadata> metaInfo = findMeta(VideoHelper.getNameFromPath(fileName));
             return metaInfo.getInputStream().readAllBytes();
         } catch (Exception e) {
             log.error("Can't download file from {} storage, reason: {}", storageType, e);
@@ -64,7 +66,7 @@ public class DropBoxStorage implements IFileStorage {
             int limit = toInt(ranges[1]);
             byte[] bytes = new byte[limit - offset + 1];
 
-            DbxDownloader<FileMetadata> metaInfo = findMeta(fileName);
+            DbxDownloader<FileMetadata> metaInfo = findMeta(VideoHelper.getNameFromPath(fileName));
             metaInfo.getInputStream().readNBytes(bytes, offset, limit);
             return bytes;
         } catch (Exception e) {
@@ -91,13 +93,14 @@ public class DropBoxStorage implements IFileStorage {
     }
 
     public boolean uploadFile(String file) {
+        log.debug("Start upload file to {} storage.", storageType);
         try (InputStream in = new FileInputStream(file)) {
             client.files()
                     .uploadBuilder("/" + VideoHelper.getNameFromPath(file))
                     .uploadAndFinish(in);
             return true;
         } catch (Exception e) {
-            log.error("Can't upload file to {} storage, reason: {}", storageType, e.getMessage());
+            log.error("Can't upload file to {} storage, reason: {}", storageType, e.getCause());
             return false;
         }
     }

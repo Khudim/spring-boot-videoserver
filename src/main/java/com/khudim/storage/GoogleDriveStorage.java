@@ -2,20 +2,22 @@ package com.khudim.storage;
 
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import static com.khudim.storage.StorageType.GOOGLE_DRIVE;
 
 @Data
 @Component
+@ConditionalOnProperty(prefix = "google-drive", value = "accessToken")
 public class GoogleDriveStorage implements IFileStorage {
 
     private StorageType storageType = GOOGLE_DRIVE;
 
-    @Value("dropBox.token")
+    @Value("google-drive.accessToken")
     private String accessToken;
 
-    @Value("dropBox.identifier")
+    @Value("google-drive.clientIdentifier")
     private String clientIdentifier;
 
     public GoogleDriveStorage() {

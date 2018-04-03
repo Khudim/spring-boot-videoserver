@@ -7,7 +7,6 @@ import com.khudim.dao.service.ContentService;
 import com.khudim.dao.service.TagsService;
 import com.khudim.dao.service.VideoService;
 import com.khudim.storage.DropBoxStorage;
-import com.khudim.storage.IFileStorage;
 import com.khudim.storage.StorageType;
 import com.khudim.utils.ProgressBar;
 import com.khudim.utils.VideoHelper;
@@ -54,17 +53,18 @@ public class HtmlParser implements IHtmlParser {
     private final VideoService videoService;
     private final ContentService contentService;
     private final ProgressBar progressBar = new ProgressBar();
-    private final IFileStorage fileStorage;
+
+    @Autowired
+    private DropBoxStorage fileStorage;
 
     @Value("${parser.directory}")
     private String directory;
 
     @Autowired
-    public HtmlParser(VideoService videoService, ContentService contentService, TagsService tagsService, DropBoxStorage dropBoxStorage) {
+    public HtmlParser(VideoService videoService, ContentService contentService, TagsService tagsService) {
         this.videoService = videoService;
         this.contentService = contentService;
         this.tagsService = tagsService;
-        fileStorage = dropBoxStorage;
     }
 
     @Scheduled(cron = "${parser.cron}")
@@ -164,7 +164,7 @@ public class HtmlParser implements IHtmlParser {
                     .userAgent("NING/1.0")
                     .get();
         } catch (IOException e) {
-            log.warn("Can't get document, reason: ", e.getMessage());
+            log.warn("Can't get document, reason: ", e.getCause());
             if (attemptCount < 5) {
                 sleep();
                 return getConnection(url, ++attemptCount);
@@ -193,7 +193,7 @@ public class HtmlParser implements IHtmlParser {
             FileUtils.copyInputStreamToFile(is, new File(fileName));
             return true;
         } catch (IOException e) {
-            log.error("Can't download from url: {}", url);
+            log.error("Can't download from url: {}, reason: {}", url, e.getCause());
             return false;
         }
     }
