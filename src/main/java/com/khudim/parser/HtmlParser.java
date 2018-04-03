@@ -54,17 +54,18 @@ public class HtmlParser implements IHtmlParser {
     private final ContentService contentService;
     private final ProgressBar progressBar = new ProgressBar();
 
-    @Autowired
+
     private DropBoxStorage fileStorage;
 
     @Value("${parser.directory}")
     private String directory;
 
     @Autowired
-    public HtmlParser(VideoService videoService, ContentService contentService, TagsService tagsService) {
+    public HtmlParser(VideoService videoService, ContentService contentService, TagsService tagsService, DropBoxStorage fileStorage) {
         this.videoService = videoService;
         this.contentService = contentService;
         this.tagsService = tagsService;
+        this.fileStorage = fileStorage;
     }
 
     @Scheduled(cron = "${parser.cron}")
@@ -164,7 +165,7 @@ public class HtmlParser implements IHtmlParser {
                     .userAgent("NING/1.0")
                     .get();
         } catch (IOException e) {
-            log.warn("Can't get document, reason: ", e.getCause());
+            log.warn("Can't get document, reason: ", e.getLocalizedMessage());
             if (attemptCount < 5) {
                 sleep();
                 return getConnection(url, ++attemptCount);

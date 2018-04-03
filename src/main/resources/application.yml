@@ -18,8 +18,8 @@ spring:
     show-sql: false
 scanner:
    cron: '0 0 0 */3 * ?'
-   directory: F:\\video\\
-   tmpDir: F:\\tmp\\
+   directory: F:/video/
+   tmpDir: F:/tmp/
 
 video:
    imageEncoderCmd: ffmpeg -ss 00:00:01 -i <image> -vframes 1 -q:v 31 <file> -y

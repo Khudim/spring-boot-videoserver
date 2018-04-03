@@ -40,7 +40,7 @@ public class VideoService {
     }
 
     public List<Video> findByTag(List<String> tags, int page, int limit) {
-        if (tags.isEmpty()) {
+        if (tags == null || tags.isEmpty()) {
             return findAll(page, limit);
         }
         Set<Tags> loadedTags = tagsService.findOrCreateTags(tags);

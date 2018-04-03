@@ -34,7 +34,7 @@ public class GoogleDriveStorage implements IFileStorage {
     }
 
     @Override
-    public byte[] downloadFile(String fileName, String[] ranges) {
+    public byte[] downloadFile(String fileName, int offset, int limit) {
         return new byte[0];
     }
 

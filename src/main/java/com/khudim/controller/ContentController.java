@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.nio.file.NoSuchFileException;
 import java.util.List;
 
+import static org.apache.commons.lang.math.NumberUtils.toInt;
 
 /**
  * Created by Beaver.
@@ -40,7 +41,7 @@ public class ContentController {
         this.fileStorages = fileStorages;
     }
 
-    @PostMapping(value = "/content")
+    @GetMapping(value = "/content")
     public ResponseContent getVideo(@RequestParam(required = false) List<String> tags, @RequestParam int page, @RequestParam int limit) {
         long count = videoService.getCount(tags);
         List<Video> videos = videoService.findByTag(tags, page, limit);
@@ -70,9 +71,11 @@ public class ContentController {
                 status = HttpStatus.OK;
             } else {
                 String[] ranges = VideoHelper.parseRanges(range);
-                bytes = fileStorage.downloadFile(content.getPath(), ranges);
+                int offset = toInt(ranges[0]);
+                int limit = (ranges.length < 2 || "-1".equals(ranges[1])) ? (int) content.getLength() : toInt(ranges[1]);
+                bytes = fileStorage.downloadFile(content.getPath(), offset, limit);
                 response.setHeader("Accept-Ranges", "bytes");
-                response.setHeader("Content-Range", "bytes " + ranges[0] + "-" + ranges[1] + "/" + content.getLength());
+                response.setHeader("Content-Range", "bytes " + offset + "-" + (limit - 1) + "/" + content.getLength());
                 status = HttpStatus.PARTIAL_CONTENT;
             }
             response.setContentType("video/webm");

@@ -23,7 +23,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static com.khudim.storage.StorageType.DROP_BOX;
-import static org.apache.commons.lang.math.NumberUtils.toInt;
 
 @Component
 @Data
@@ -60,14 +59,14 @@ public class DropBoxStorage implements IFileStorage {
     }
 
     @Override
-    public byte[] downloadFile(String fileName, String[] ranges) {
+    public byte[] downloadFile(String fileName, int offset, int limit) {
         try {
-            int offset = toInt(ranges[0]);
-            int limit = toInt(ranges[1]);
-            byte[] bytes = new byte[limit - offset + 1];
+            byte[] bytes = new byte[limit - offset];
 
             DbxDownloader<FileMetadata> metaInfo = findMeta(VideoHelper.getNameFromPath(fileName));
-            metaInfo.getInputStream().readNBytes(bytes, offset, limit);
+            InputStream inputStream = metaInfo.getInputStream();
+            inputStream.skip(offset);
+            inputStream.readNBytes(bytes, 0, limit - offset);
             return bytes;
         } catch (Exception e) {
             log.error("Can't download file from {} storage, reason: {}", storageType, e);
