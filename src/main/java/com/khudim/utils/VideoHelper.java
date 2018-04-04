@@ -12,6 +12,7 @@ import org.stringtemplate.v4.ST;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.apache.commons.lang.math.NumberUtils.toInt;
@@ -25,6 +26,7 @@ import static org.apache.commons.lang.math.NumberUtils.toInt;
 @ConfigurationProperties(prefix = "video")
 public class VideoHelper {
     public final static String VIDEO_TAG = "webm";
+    public final static List<String> ALLOWED_VIDEO_TYPES = List.of("webm", "mp4");
     private static Logger log = LoggerFactory.getLogger(VideoHelper.class);
 
     private final static String imageEncoderCmd = "ffmpeg -ss 00:00:01 -i <image> -vframes 1 -q:v 31 <file> -y";

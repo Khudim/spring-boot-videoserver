@@ -5,7 +5,6 @@ import com.dropbox.core.DbxException;
 import com.dropbox.core.DbxRequestConfig;
 import com.dropbox.core.v2.DbxClientV2;
 import com.dropbox.core.v2.files.FileMetadata;
-import com.khudim.parser.HtmlParser;
 import com.khudim.utils.VideoHelper;
 import lombok.Data;
 import org.slf4j.Logger;
@@ -26,11 +25,11 @@ import static com.khudim.storage.StorageType.DROP_BOX;
 
 @Component
 @Data
-@ConditionalOnProperty(prefix = "drop-box", value = "accessToken")
-@ConfigurationProperties(prefix = "drop-box")
+@ConditionalOnProperty(prefix = "storage.drop-box", value = "accessToken")
+@ConfigurationProperties(prefix = "storage.drop-box")
 public class DropBoxStorage implements IFileStorage {
 
-    private final static Logger log = LoggerFactory.getLogger(HtmlParser.class);
+    private final static Logger log = LoggerFactory.getLogger(DropBoxStorage.class);
     private final static Map<String, DbxDownloader<FileMetadata>> CASH = new ConcurrentHashMap<>();
 
     private final ExecutorService service = Executors.newSingleThreadExecutor();

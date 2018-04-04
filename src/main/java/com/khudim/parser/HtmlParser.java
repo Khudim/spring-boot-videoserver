@@ -6,7 +6,7 @@ import com.khudim.dao.entity.Video;
 import com.khudim.dao.service.ContentService;
 import com.khudim.dao.service.TagsService;
 import com.khudim.dao.service.VideoService;
-import com.khudim.storage.DropBoxStorage;
+import com.khudim.storage.IFileStorage;
 import com.khudim.storage.StorageType;
 import com.khudim.utils.ProgressBar;
 import com.khudim.utils.VideoHelper;
@@ -34,7 +34,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static com.khudim.utils.Utilities.sleep;
-import static com.khudim.utils.VideoHelper.VIDEO_TAG;
+import static com.khudim.utils.VideoHelper.ALLOWED_VIDEO_TYPES;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.IntStream.range;
 
@@ -54,18 +54,17 @@ public class HtmlParser implements IHtmlParser {
     private final ContentService contentService;
     private final ProgressBar progressBar = new ProgressBar();
 
-
-    private DropBoxStorage fileStorage;
+    private List<IFileStorage> fileStorages;
 
     @Value("${parser.directory}")
     private String directory;
 
     @Autowired
-    public HtmlParser(VideoService videoService, ContentService contentService, TagsService tagsService, DropBoxStorage fileStorage) {
+    public HtmlParser(VideoService videoService, ContentService contentService, TagsService tagsService, List<IFileStorage> fileStorages) {
         this.videoService = videoService;
         this.contentService = contentService;
         this.tagsService = tagsService;
-        this.fileStorage = fileStorage;
+        this.fileStorages = fileStorages;
     }
 
     @Scheduled(cron = "${parser.cron}")
@@ -109,10 +108,11 @@ public class HtmlParser implements IHtmlParser {
     }
 
     private Set<ContentInfo> parseUrlsForEachPage(String pageUrl) {
-        return Stream.ofNullable(getConnection(pageUrl, 0))
+        return Stream.ofNullable(getConnection(pageUrl))
                 .flatMap(this::searchUrls)
                 .collect(toSet());
     }
+
 
     private Stream<ContentInfo> searchUrls(Document document) {
         return document.addClass("thread_text")
@@ -124,13 +124,14 @@ public class HtmlParser implements IHtmlParser {
     }
 
     private boolean checkElement(Element element) {
-        return element.text().toLowerCase().contains(VIDEO_TAG)
+        return ALLOWED_VIDEO_TYPES.stream().anyMatch(type -> element.text().toLowerCase().contains(type))
                 && StringUtils.isNotBlank(element.attr("href"));
     }
 
     private void downloadVideo(ContentInfo info) {
-        Stream.ofNullable(getConnection(info.getThreadUrl(), 0))
-                .forEach(document -> downloadByTags(document, info));
+        Stream.ofNullable(
+                getConnection(info.getThreadUrl())
+        ).forEach(document -> downloadByTags(document, info));
     }
 
     private void downloadByTags(Document document, ContentInfo info) {
@@ -141,22 +142,31 @@ public class HtmlParser implements IHtmlParser {
                 .filter(this::checkFile)
                 .forEach(src -> {
                     String filePath = directory + getFileNameFromUrl(src);
-                    StorageType storageType = fileStorage.getStorageType();
+                    IFileStorage fileStorage = selectStorage();
                     if (downloadFromSrc(src, filePath)) {
-                        if (storageType != StorageType.LOCAL_STORAGE) {
-                            fileStorage.uploadFile(filePath);
-                        }
-                        addContentToBase(info, filePath, getFileNameFromUrl(src), storageType);
+                        fileStorage.uploadFile(filePath);
+                        saveContent(info, filePath, getFileNameFromUrl(src), fileStorage.getStorageType());
                     }
                 });
     }
 
+    private IFileStorage selectStorage() {
+        //TODO select storage by.. i don't know yet
+        return fileStorages.get(0);
+    }
+
     private boolean checkFile(String src) {
-        return src.endsWith("." + VIDEO_TAG) && !videoService.isRepeated(getFileNameFromUrl(src));
+        String videoType = src.substring(src.lastIndexOf(".") + 1, src.length());
+        return ALLOWED_VIDEO_TYPES.contains(videoType)
+                && !videoService.isRepeated(getFileNameFromUrl(src));
     }
 
     private String getFileNameFromUrl(String src) {
         return src.substring(src.lastIndexOf("/") + 1);
+    }
+
+    private Document getConnection(String pageUrl) {
+        return getConnection(pageUrl, 0);
     }
 
     private Document getConnection(String url, int attemptCount) {
@@ -199,7 +209,7 @@ public class HtmlParser implements IHtmlParser {
         }
     }
 
-    private void addContentToBase(ContentInfo info, String contentPath, String fileName, StorageType storageType) {
+    private void saveContent(ContentInfo info, String contentPath, String fileName, StorageType storageType) {
         try {
             byte[] image = VideoHelper.getImageFromVideo(contentPath);
             int[] videoSize = VideoHelper.getVideoSize(contentPath);
@@ -207,11 +217,10 @@ public class HtmlParser implements IHtmlParser {
             Content content = new Content();
             content.setPath(contentPath);
             content.setImage(image);
-            content.setStorage(storageType.name());
             content.setLength(new File(contentPath).length());
             contentService.save(content);
 
-            Video video = createVideo(fileName, videoSize, content);
+            Video video = createVideo(fileName, videoSize, content.getId(), storageType);
             videoService.save(video);
             Set<Tags> tags = tagsService.findOrCreateTags(info.getTags());
             video.setVideoTags(tags);
@@ -222,19 +231,18 @@ public class HtmlParser implements IHtmlParser {
         } catch (Exception e) {
             log.error("Can't prepare content " + contentPath, e);
         } finally {
-            if (storageType != StorageType.LOCAL_STORAGE) {
-                FileUtils.deleteQuietly(new File(contentPath));
-            }
+            FileUtils.deleteQuietly(new File(contentPath));
         }
     }
 
-    private Video createVideo(String fileName, int[] videoSize, Content content) {
+    private Video createVideo(String fileName, int[] videoSize, long contentId, StorageType storageType) {
         Video video = new Video();
-        video.setContentId(content.getId());
+        video.setContentId(contentId);
         video.setName(fileName);
         video.setDate(System.currentTimeMillis());
         video.setWidth(videoSize[0]);
         video.setHeight(videoSize[1]);
+        video.setStorage(storageType.name());
         return video;
     }
 

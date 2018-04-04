@@ -18,7 +18,11 @@ public interface VideoRepository extends JpaRepository<Video, Long>, CrudReposit
 
     Video findFirstByName(String name);
 
-    List<Video> findByVideoTags(Set<Tags> tags, Pageable pageable);
+    List<Video> findByVideoTagsAndStorage(Set<Tags> tags, Pageable pageable, List<String> fileStorages);
 
-    Long countByVideoTags(Set<Tags> tags);
+    List<Video> findByStorage(Pageable pageable, List<String> fileStorages);
+
+    long countByVideoTagsAndStorage(Set<Tags> tags, List<String> fileStorages);
+
+    long countByStorage(List<String> fileStorages);
 }

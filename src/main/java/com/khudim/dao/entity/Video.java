@@ -28,6 +28,8 @@ public class Video implements Serializable {
     private int width;
     private int height;
     @JsonIgnore
+    private String storage;
+    @JsonIgnore
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "videos", cascade = CascadeType.MERGE)
     private Set<Tags> videoTags = new HashSet<>(0);
 }
