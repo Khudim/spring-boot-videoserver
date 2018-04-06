@@ -1,7 +1,6 @@
 package com.khudim.controller;
 
 import com.khudim.parser.IHtmlParser;
-import com.khudim.utils.ProgressBar;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -37,8 +36,4 @@ public class JobController {
         executorService.submit(parser::findVideos);
     }
 
-    @GetMapping(value = "/progress")
-    public ProgressBar getDownloadProgress() {
-        return parser.getProgressBar();
-    }
 }

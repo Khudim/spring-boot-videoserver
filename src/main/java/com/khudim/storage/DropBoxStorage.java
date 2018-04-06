@@ -1,7 +1,6 @@
 package com.khudim.storage;
 
 import com.dropbox.core.DbxDownloader;
-import com.dropbox.core.DbxException;
 import com.dropbox.core.DbxRequestConfig;
 import com.dropbox.core.v2.DbxClientV2;
 import com.dropbox.core.v2.files.FileMetadata;
@@ -16,8 +15,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.nio.file.NoSuchFileException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -30,7 +28,6 @@ import static com.khudim.storage.StorageType.DROP_BOX;
 public class DropBoxStorage implements IFileStorage {
 
     private final static Logger log = LoggerFactory.getLogger(DropBoxStorage.class);
-    private final static Map<String, DbxDownloader<FileMetadata>> CASH = new ConcurrentHashMap<>();
 
     private final ExecutorService service = Executors.newSingleThreadExecutor();
 
@@ -49,7 +46,7 @@ public class DropBoxStorage implements IFileStorage {
     @Override
     public byte[] downloadFile(String fileName) {
         try {
-            DbxDownloader<FileMetadata> metaInfo = findMeta(VideoHelper.getNameFromPath(fileName));
+            DbxDownloader<FileMetadata> metaInfo = client.files().download("/" + VideoHelper.getNameFromPath(fileName));
             return metaInfo.getInputStream().readAllBytes();
         } catch (Exception e) {
             log.error("Can't download file from {} storage, reason: {}", storageType, e);
@@ -58,36 +55,16 @@ public class DropBoxStorage implements IFileStorage {
     }
 
     @Override
-    public byte[] downloadFile(String fileName, int offset, int limit) {
-        try {
+    public byte[] downloadFile(String fileName, int offset, int limit) throws NoSuchFileException {
+        try (DbxDownloader<FileMetadata> metaInfo = client.files().download("/" + VideoHelper.getNameFromPath(fileName))) {
             byte[] bytes = new byte[limit - offset];
-
-            DbxDownloader<FileMetadata> metaInfo = findMeta(VideoHelper.getNameFromPath(fileName));
             InputStream inputStream = metaInfo.getInputStream();
             inputStream.skip(offset);
             inputStream.readNBytes(bytes, 0, limit - offset);
             return bytes;
         } catch (Exception e) {
-            log.error("Can't download file from {} storage, reason: {}", storageType, e);
-            return new byte[0];
+            throw new NoSuchFileException("Can't download file, reason: " + e);
         }
-    }
-
-    private DbxDownloader<FileMetadata> findMeta(String fileName) throws DbxException {
-        DbxDownloader<FileMetadata> metaInfo = CASH.get(fileName);
-        if (metaInfo == null) {
-            if (CASH.size() > maxCashSize) {
-                service.execute(this::clearCash);
-            }
-            metaInfo = client.files().download("/" + fileName);
-            CASH.put(fileName, metaInfo);
-        }
-        return metaInfo;
-    }
-
-    private void clearCash() {
-        CASH.forEach((k, v) -> v.close());
-        CASH.clear();
     }
 
     public boolean uploadFile(String file) {

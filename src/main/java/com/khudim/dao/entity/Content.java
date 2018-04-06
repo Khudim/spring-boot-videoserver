@@ -18,4 +18,8 @@ public class Content implements Serializable {
     private byte[] image;
     private String path;
     private long length;
+    @OneToOne(fetch = FetchType.LAZY)
+    @PrimaryKeyJoinColumn
+    private Video video;
+    private String storage;
 }

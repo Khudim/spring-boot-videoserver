@@ -87,3 +87,14 @@ databaseChangeLog:
                            foreignKeyName: fk_tag
                            references: tags(id)
                            nullable: false
+
+  - changeSet:
+      id: 2
+      author: khudim
+      changes:
+        - addColumn:
+            columns:
+            - column:
+                name: storage
+                type: varchar(255)
+            tableName: video

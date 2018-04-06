@@ -73,7 +73,7 @@ public class VideoRepositoryTest {
     @Test
     public void shouldFindByTags() {
         Set<Tags> tags = List.of(".webm", "fap", "test2").stream().map(tag -> tagsRepository.findFirstByTag(tag)).filter(Objects::nonNull).collect(Collectors.toSet());
-        List<Video> videos = videoRepository.findByVideoTags(tags, of(0, 2));
+        List<Video> videos = videoRepository.findByVideoTagsAndStorage(tags, of(0, 2), null);
         Assert.assertEquals(2, videos.size());
     }
 
@@ -86,7 +86,7 @@ public class VideoRepositoryTest {
     @Test
     public void shouldCountByTags() {
         Set<Tags> tags = List.of(".webm", "fap", "test2").stream().map(tag -> tagsRepository.findFirstByTag(tag)).filter(Objects::nonNull).collect(Collectors.toSet());
-        long count = videoRepository.countByVideoTags(tags);
+        long count = videoRepository.countByVideoTagsAndStorage(tags, null);
         Assert.assertEquals(2, count);
     }
 }

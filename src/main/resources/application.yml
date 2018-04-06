@@ -1,8 +1,7 @@
 logging:
   level:
-    com.khudim.scanner: DEBUG
-    com.khudim.parser: DEBUG
-    org.springframework.web: ERROR
+    org.springframework.web: DEBUG
+    com.khudim: DEBUG
     org.hibernate: ERROR
 server:
   port: ${PORT:80}
@@ -29,7 +28,8 @@ parser:
    cron: '0 0 0 */3 * ?'
    directory: ${scanner.directory}
 
-drop-box:
+storage:
+   drop-box:
     accessToken: "7_qqzy3_t7AAAAAAAAAAKsqzNt35GZ1f4N2NEJKn0ByNo0oKpGjGtnhoXlx2lBk8"
     clientIdentifier: "video-server"
     maxCashSize: 400

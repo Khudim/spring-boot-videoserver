@@ -24,7 +24,10 @@ public class Video implements Serializable {
     private long id;
     private String name;
     private long date;
-    private long contentId;
+    @OneToOne(mappedBy = "video", cascade = CascadeType.ALL,
+            fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id")
+    private Content contentId;
     private int width;
     private int height;
     @JsonIgnore

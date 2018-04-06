@@ -20,8 +20,8 @@ public class ContentService {
         this.contentRepository = contentRepository;
     }
 
-    public void save(Content content) {
-        contentRepository.save(content);
+    public Content save(Content content) {
+        return contentRepository.save(content);
     }
 
     public Content getContent(long contentId) throws NoSuchFileException {

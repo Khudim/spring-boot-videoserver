@@ -8,7 +8,6 @@ import com.khudim.dao.service.TagsService;
 import com.khudim.dao.service.VideoService;
 import com.khudim.storage.IFileStorage;
 import com.khudim.storage.StorageType;
-import com.khudim.utils.ProgressBar;
 import com.khudim.utils.VideoHelper;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -31,6 +30,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 import static com.khudim.utils.Utilities.sleep;
@@ -49,10 +49,11 @@ public class HtmlParser implements IHtmlParser {
     private final static String URL = "https://arhivach.org";
     private final static int PAGE_LIMIT = 30;
 
+    private final static AtomicBoolean inProgress = new AtomicBoolean(false);
+
     private final TagsService tagsService;
     private final VideoService videoService;
     private final ContentService contentService;
-    private final ProgressBar progressBar = new ProgressBar();
 
     private List<IFileStorage> fileStorages;
 
@@ -76,34 +77,18 @@ public class HtmlParser implements IHtmlParser {
 
     @Override
     public void findVideos() {
-        if (!progressBar.getInProcess().compareAndSet(false, true)) {
+        if (!inProgress.compareAndSet(false, true)) {
             log.debug("Downloading in progress, can't start new one");
             return;
         }
         log.debug("Start downloadVideo");
 
-        progressBar.reset();
-
-        Set<ContentInfo> contentInfo = range(0, progressBar.getScanLimit())
-                .mapToObj(i -> {
-                    progressBar.riseScanProgress();
-                    return parseUrlsForEachPage(URL + generatePageString(i));
-                })
+        range(0, PAGE_LIMIT)
+                .mapToObj(page -> parseUrlsForEachPage(URL + generatePageString(page)))
                 .flatMap(Set::stream)
-                .collect(toSet());
+                .forEach(this::downloadVideo);
 
-        progressBar.setTotalVideos(contentInfo.size());
-
-        if (contentInfo.size() == 0) {
-            log.debug("Total contentInfo == 0");
-            progressBar.getInProcess().set(false);
-            return;
-        }
-        contentInfo.forEach(info -> {
-            downloadVideo(info);
-            progressBar.riseDownloadProgress();
-        });
-        progressBar.getInProcess().set(false);
+        inProgress.set(false);
         log.debug("Stop downloadVideo");
     }
 
@@ -124,8 +109,11 @@ public class HtmlParser implements IHtmlParser {
     }
 
     private boolean checkElement(Element element) {
-        return ALLOWED_VIDEO_TYPES.stream().anyMatch(type -> element.text().toLowerCase().contains(type))
-                && StringUtils.isNotBlank(element.attr("href"));
+        return isValid(element) && StringUtils.isNotBlank(element.attr("href"));
+    }
+
+    private boolean isValid(Element element) {
+        return ALLOWED_VIDEO_TYPES.stream().anyMatch(type -> element.text().toLowerCase().contains(type));
     }
 
     private void downloadVideo(ContentInfo info) {
@@ -145,7 +133,7 @@ public class HtmlParser implements IHtmlParser {
                     IFileStorage fileStorage = selectStorage();
                     if (downloadFromSrc(src, filePath)) {
                         fileStorage.uploadFile(filePath);
-                        saveContent(info, filePath, getFileNameFromUrl(src), fileStorage.getStorageType());
+                        saveInfo(info, filePath, getFileNameFromUrl(src), fileStorage.getStorageType());
                     }
                 });
     }
@@ -209,20 +197,15 @@ public class HtmlParser implements IHtmlParser {
         }
     }
 
-    private void saveContent(ContentInfo info, String contentPath, String fileName, StorageType storageType) {
+    private void saveInfo(ContentInfo info, String contentPath, String fileName, StorageType storageType) {
         try {
             byte[] image = VideoHelper.getImageFromVideo(contentPath);
             int[] videoSize = VideoHelper.getVideoSize(contentPath);
 
-            Content content = new Content();
-            content.setPath(contentPath);
-            content.setImage(image);
-            content.setLength(new File(contentPath).length());
-            contentService.save(content);
+            Content content = saveContent(contentPath, storageType, image);
+            Video video = saveVideo(fileName, videoSize, content.getId());
 
-            Video video = createVideo(fileName, videoSize, content.getId(), storageType);
-            videoService.save(video);
-            Set<Tags> tags = tagsService.findOrCreateTags(info.getTags());
+            Set<Tags> tags = tagsService.findTags(info.getTags());
             video.setVideoTags(tags);
             tags.forEach(tag -> {
                 tag.addVideo(video);
@@ -235,15 +218,23 @@ public class HtmlParser implements IHtmlParser {
         }
     }
 
-    private Video createVideo(String fileName, int[] videoSize, long contentId, StorageType storageType) {
+    private Content saveContent(String contentPath, StorageType storageType, byte[] image) {
+        Content content = new Content();
+        content.setPath(contentPath);
+        content.setImage(image);
+        content.setLength(new File(contentPath).length());
+        content.setStorage(storageType.name());
+        return contentService.save(content);
+    }
+
+    private Video saveVideo(String fileName, int[] videoSize, long contentId) {
         Video video = new Video();
-        video.setContentId(contentId);
+        // video.setContentId(contentId);
         video.setName(fileName);
         video.setDate(System.currentTimeMillis());
         video.setWidth(videoSize[0]);
         video.setHeight(videoSize[1]);
-        video.setStorage(storageType.name());
-        return video;
+        return videoService.save(video);
     }
 
     @Data

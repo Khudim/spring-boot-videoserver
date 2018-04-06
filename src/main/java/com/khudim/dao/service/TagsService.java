@@ -20,7 +20,7 @@ public class TagsService {
         this.tagsRepository = tagsRepository;
     }
 
-    public Set<Tags> findOrCreateTags(List<String> tags) {
+    public Set<Tags> findTags(List<String> tags) {
         return tags.stream().map(tag -> {
             Tags existedTag = tagsRepository.findFirstByTag(tag);
             if (existedTag == null) {

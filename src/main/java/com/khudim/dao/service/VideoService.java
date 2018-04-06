@@ -35,8 +35,8 @@ public class VideoService {
         return videoRepository.findFirstByName(name) != null;
     }
 
-    public void save(Video video) {
-        videoRepository.save(video);
+    public Video save(Video video) {
+        return videoRepository.save(video);
     }
 
     public List<Video> findAll(int page, int limit) {
@@ -47,7 +47,7 @@ public class VideoService {
         if (tags == null || tags.isEmpty()) {
             return findAll(page, limit);
         }
-        Set<Tags> loadedTags = tagsService.findOrCreateTags(tags);
+        Set<Tags> loadedTags = tagsService.findTags(tags);
         if (loadedTags.isEmpty()) {
             return Collections.emptyList();
         }
@@ -63,7 +63,7 @@ public class VideoService {
         if (tags == null || tags.isEmpty()) {
             return getCount();
         }
-        Set<Tags> loadedTags = tagsService.findOrCreateTags(tags);
+        Set<Tags> loadedTags = tagsService.findTags(tags);
         if (loadedTags.isEmpty()) {
             return 0;
         }
