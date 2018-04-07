@@ -202,9 +202,8 @@ public class HtmlParser implements IHtmlParser {
             byte[] image = VideoHelper.getImageFromVideo(contentPath);
             int[] videoSize = VideoHelper.getVideoSize(contentPath);
 
-            Video video = createVideo(fileName, videoSize);
             Content content = createContent(contentPath, storageType, image);
-            video.setContentId(content.getId());
+            Video video = createVideo(fileName, videoSize, content.getId());
             content.setVideo(video);
 
             Set<Tags> tags = tagsService.findTags(info.getTags());
@@ -229,12 +228,13 @@ public class HtmlParser implements IHtmlParser {
         return contentService.save(content);
     }
 
-    private Video createVideo(String fileName, int[] videoSize) {
+    private Video createVideo(String fileName, int[] videoSize, long contentId) {
         Video video = new Video();
         video.setName(fileName);
         video.setDate(System.currentTimeMillis());
         video.setWidth(videoSize[0]);
         video.setHeight(videoSize[1]);
+        video.setContentId(contentId);
         return videoService.save(video);
     }
 

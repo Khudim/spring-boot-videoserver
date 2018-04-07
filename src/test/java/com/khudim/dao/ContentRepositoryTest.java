@@ -2,8 +2,10 @@ package com.khudim.dao;
 
 import com.khudim.dao.entity.Content;
 import com.khudim.dao.entity.Tags;
+import com.khudim.dao.entity.Video;
 import com.khudim.dao.repository.ContentRepository;
 import com.khudim.dao.repository.TagsRepository;
+import com.khudim.dao.repository.VideoRepository;
 import com.khudim.storage.StorageType;
 import org.junit.Assert;
 import org.junit.Before;
@@ -34,6 +36,9 @@ public class ContentRepositoryTest {
 
     @Autowired
     private TagsRepository tagsRepository;
+
+    @Autowired
+    private VideoRepository videoRepository;
 
     private String path = "path";
 
@@ -88,5 +93,19 @@ public class ContentRepositoryTest {
         Set<Tags> tags = List.of(".webm", ".mus2", "test2").stream().map(tag -> tagsRepository.findFirstByTag(tag)).filter(Objects::nonNull).collect(Collectors.toSet());
         List<Content> contents = contentRepository.findByContentTagsInAndStorageIn(tags, of(0, 2), Collections.singletonList(StorageType.LOCAL_STORAGE.name()));
         Assert.assertEquals(2, contents.size());
+    }
+
+    @Test
+    public void shouldSaveContentId() {
+        Content content = new Content();
+        content.setPath("n");
+        contentRepository.save(content);
+        Video video = new Video();
+        video.setName("n");
+        video.setContentId(content.getId());
+        videoRepository.save(video);
+        content.setVideo(video);
+        video = videoRepository.findFirstByName("n");
+        Assert.assertEquals(content.getId(), video.getContentId());
     }
 }
