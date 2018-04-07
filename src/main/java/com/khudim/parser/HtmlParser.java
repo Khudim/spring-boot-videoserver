@@ -28,7 +28,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
@@ -93,11 +95,11 @@ public class HtmlParser implements IHtmlParser {
     }
 
     private Set<ContentInfo> parseUrlsForEachPage(String pageUrl) {
-        return Stream.ofNullable(getConnection(pageUrl))
-                .flatMap(this::searchUrls)
-                .collect(toSet());
+        Set<ContentInfo> contentInfos = new HashSet<>();
+        getConnection(pageUrl)
+                .ifPresent(document -> contentInfos.addAll(searchUrls(document).collect(toSet())));
+        return contentInfos;
     }
-
 
     private Stream<ContentInfo> searchUrls(Document document) {
         return document.addClass("thread_text")
@@ -117,9 +119,8 @@ public class HtmlParser implements IHtmlParser {
     }
 
     private void downloadVideo(ContentInfo info) {
-        Stream.ofNullable(
-                getConnection(info.getThreadUrl())
-        ).forEach(document -> downloadByTags(document, info));
+        getConnection(info.getThreadUrl())
+                .ifPresent(document -> downloadByTags(document, info));
     }
 
     private void downloadByTags(Document document, ContentInfo info) {
@@ -153,22 +154,22 @@ public class HtmlParser implements IHtmlParser {
         return src.substring(src.lastIndexOf("/") + 1);
     }
 
-    private Document getConnection(String pageUrl) {
+    private Optional<Document> getConnection(String pageUrl) {
         return getConnection(pageUrl, 0);
     }
 
-    private Document getConnection(String url, int attemptCount) {
+    private Optional<Document> getConnection(String url, int attemptCount) {
         try {
-            return Jsoup.connect(url)
+            return Optional.ofNullable(Jsoup.connect(url)
                     .userAgent("NING/1.0")
-                    .get();
+                    .get());
         } catch (IOException e) {
             log.warn("Can't get document, reason: ", e.getLocalizedMessage());
             if (attemptCount < 5) {
                 sleep();
                 return getConnection(url, ++attemptCount);
             } else {
-                return null;
+                return Optional.empty();
             }
         }
     }

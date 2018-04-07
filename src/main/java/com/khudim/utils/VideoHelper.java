@@ -9,13 +9,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.stringtemplate.v4.ST;
 
-import java.io.*;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import static org.apache.commons.lang.math.NumberUtils.toInt;
 
 
 /**
@@ -25,12 +26,12 @@ import static org.apache.commons.lang.math.NumberUtils.toInt;
 @Data
 @ConfigurationProperties(prefix = "video")
 public class VideoHelper {
-    public final static String VIDEO_TAG = "webm";
-    public final static List<String> ALLOWED_VIDEO_TYPES = List.of("webm", "mp4");
-    private static Logger log = LoggerFactory.getLogger(VideoHelper.class);
 
-    private final static String imageEncoderCmd = "ffmpeg -ss 00:00:01 -i <image> -vframes 1 -q:v 31 <file> -y";
-    private final static String videoSizeCmd = "ffprobe -v error -show_entries stream=width,height -of default=noprint_wrappers=1 <video>";
+    public final static List<String> ALLOWED_VIDEO_TYPES = List.of("webm", "mp4");
+    
+    private static Logger log = LoggerFactory.getLogger(VideoHelper.class);
+    private static String imageEncoderCmd = "ffmpeg -ss 00:00:01 -i <image> -vframes 1 -q:v 31 <file> -y";
+
 
     @Value("${scanner.tmpDir}")
     private String tmpDir = "/tmp";
@@ -46,31 +47,13 @@ public class VideoHelper {
         return ranges;
     }
 
-    public static int[] getVideoSize(String path) throws IOException, InterruptedException {
-        int width;
-        int height;
-        Process pb = null;
+    public static int[] getVideoSize(String path) {
         try {
-            pb = new ProcessBuilder(createVideoSizeCmd(path)).start();
-            pb.waitFor(10, TimeUnit.SECONDS);
-
-            String[] output = readOutput(pb.getInputStream());
-            if (output.length < 2) {
-                throw new IOException("Can't get video parameters with command: " + videoSizeCmd);
-            }
-            width = toInt(output[0].split("=")[1]);
-            height = toInt(output[1].split("=")[1]);
-        } finally {
-            if (pb != null) {
-                pb.destroy();
-            }
-        }
-        return new int[]{width, height};
-    }
-
-    private static String[] readOutput(InputStream inputStream) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-            return reader.lines().toArray(String[]::new);
+            BufferedImage image = ImageIO.read(new File(path));
+            return new int[]{image.getWidth(), image.getHeight()};
+        } catch (IOException e) {
+            log.error("Can't get image size, reason = {}", e);
+            return new int[2];
         }
     }
 
@@ -99,10 +82,6 @@ public class VideoHelper {
             }
             FileUtils.deleteQuietly(tempFile);
         }
-    }
-
-    private static String[] createVideoSizeCmd(String path) {
-        return new ST(videoSizeCmd).add("video", path).render().split(" ");
     }
 
     public static String getNameFromPath(String filePath) {
