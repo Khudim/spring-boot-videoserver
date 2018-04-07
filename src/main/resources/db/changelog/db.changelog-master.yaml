@@ -52,7 +52,10 @@ databaseChangeLog:
                   type: bigint
               - column:
                   name: storage
-                  type: varchar
+                  type: varchar(255)
+              - column:
+                  name: video_id
+                  type: bigint
 
         - createTable:
             tableName: tags
@@ -69,15 +72,15 @@ databaseChangeLog:
                      type: varchar(255)
 
         - createTable:
-            tableName: video_tags
+            tableName: content_tags
             columns:
                     - column:
-                          name: video_id
+                          name: content_id
                           type: bigint
                           constraints:
                            primaryKey: true
-                           foreignKeyName: fk_video
-                           references: video(id)
+                           foreignKeyName: fk_content
+                           references: content(id)
                            nullable: false
                     - column:
                           name: tag_id
@@ -87,14 +90,3 @@ databaseChangeLog:
                            foreignKeyName: fk_tag
                            references: tags(id)
                            nullable: false
-
-  - changeSet:
-      id: 2
-      author: khudim
-      changes:
-        - addColumn:
-            columns:
-            - column:
-                name: storage
-                type: varchar(255)
-            tableName: video

@@ -3,7 +3,6 @@ package com.khudim.controller;
 import com.khudim.dao.entity.Content;
 import com.khudim.dao.entity.Video;
 import com.khudim.dao.service.ContentService;
-import com.khudim.dao.service.VideoService;
 import com.khudim.storage.IFileStorage;
 import com.khudim.utils.VideoHelper;
 import lombok.Data;
@@ -19,6 +18,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.nio.file.NoSuchFileException;
 import java.util.List;
 
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.math.NumberUtils.toInt;
 
 /**
@@ -31,20 +31,21 @@ public class ContentController {
     private static Logger log = LoggerFactory.getLogger(ContentController.class);
 
     private final ContentService contentService;
-    private final VideoService videoService;
     private final List<IFileStorage> fileStorages;
 
     @Autowired
-    public ContentController(ContentService contentService, VideoService videoService, List<IFileStorage> fileStorages) {
+    public ContentController(ContentService contentService, List<IFileStorage> fileStorages) {
         this.contentService = contentService;
-        this.videoService = videoService;
         this.fileStorages = fileStorages;
     }
 
     @GetMapping(value = "/content")
     public ResponseContent getVideo(@RequestParam(required = false) List<String> tags, @RequestParam int page, @RequestParam int limit) {
-        long count = videoService.getCount(tags);
-        List<Video> videos = videoService.findByTag(tags, page, limit);
+        long count = contentService.getCount(tags, fileStorages);
+        List<Video> videos = contentService.findByTag(tags, page, limit, fileStorages)
+                .stream()
+                .map(Content::getVideo)
+                .collect(toList());
         return new ResponseContent(count, videos);
     }
 

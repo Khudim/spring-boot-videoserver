@@ -14,8 +14,8 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @Table(name = "tags")
-@EqualsAndHashCode(exclude = {"videos", "id"})
-@ToString(exclude = "videos")
+@EqualsAndHashCode(exclude = {"contents", "id"})
+@ToString(exclude = "contents")
 public class Tags {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,20 +23,20 @@ public class Tags {
     private String tag;
     @JsonIgnore
     @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST})
-    @JoinTable(name = "video_tags", joinColumns = {
+    @JoinTable(name = "content_tags", joinColumns = {
             @JoinColumn(name = "tag_id")}, inverseJoinColumns = {
-            @JoinColumn(name = "video_id")
+            @JoinColumn(name = "content_id")
     })
-    private Set<Video> videos = new HashSet<>(0);
+    private Set<Content> contents = new HashSet<>(0);
 
     public Tags(String tag) {
         this.tag = tag;
     }
 
-    public void addVideo(Video video) {
-        if (videos.contains(video)) {
+    public void addContent(Content content) {
+        if (contents.contains(content)) {
             return;
         }
-        videos.add(video);
+        contents.add(content);
     }
 }
