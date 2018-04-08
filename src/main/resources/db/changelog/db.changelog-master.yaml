@@ -56,7 +56,9 @@ databaseChangeLog:
               - column:
                   name: video_id
                   type: bigint
-
+                  constraints:
+                           foreignKeyName: fk_content_video
+                           references: video(id)
         - createTable:
             tableName: tags
             columns:
@@ -70,6 +72,9 @@ databaseChangeLog:
               - column:
                      name: tag
                      type: varchar(255)
+              - column:
+                     name: count
+                     type: bigint
 
         - createTable:
             tableName: content_tags

@@ -1,6 +1,5 @@
 package com.khudim.dao.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -21,7 +20,7 @@ public class Tags {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
     private String tag;
-    @JsonIgnore
+    private long count;
     @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST})
     @JoinTable(name = "content_tags", joinColumns = {
             @JoinColumn(name = "tag_id")}, inverseJoinColumns = {
@@ -38,5 +37,9 @@ public class Tags {
             return;
         }
         contents.add(content);
+    }
+
+    public void incrementCount() {
+        count++;
     }
 }

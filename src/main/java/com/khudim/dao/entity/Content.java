@@ -1,5 +1,6 @@
 package com.khudim.dao.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -15,8 +16,9 @@ import java.util.Set;
 @Entity
 @Table
 @Data
-@EqualsAndHashCode(exclude = {"contentTags"})
-@ToString(exclude = {"contentTags"})
+@EqualsAndHashCode(exclude = {"contentTags", "video"})
+@ToString(exclude = {"contentTags", "video"})
+@JsonIgnoreProperties({"image", "path", "length", "video", "storage", "contentTags"})
 public class Content implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,7 +26,7 @@ public class Content implements Serializable {
     private byte[] image;
     private String path;
     private long length;
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToOne(fetch = FetchType.EAGER, mappedBy = "content", cascade = CascadeType.ALL)
     private Video video;
     private String storage;
     @ManyToMany(fetch = FetchType.LAZY, mappedBy = "contents", cascade = {CascadeType.MERGE, CascadeType.PERSIST})

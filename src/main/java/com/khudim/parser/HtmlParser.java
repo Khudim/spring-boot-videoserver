@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -37,6 +38,7 @@ import java.util.stream.Stream;
 
 import static com.khudim.utils.Utilities.sleep;
 import static com.khudim.utils.VideoHelper.ALLOWED_VIDEO_TYPES;
+import static com.khudim.utils.VideoHelper.encodeVideo;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.IntStream.range;
 
@@ -130,11 +132,15 @@ public class HtmlParser implements IHtmlParser {
                 .map(element -> element.attr("href"))
                 .filter(this::checkFile)
                 .forEach(src -> {
-                    String filePath = directory + getFileNameFromUrl(src);
+                    File file = new File(directory + getFileNameFromUrl(src));
                     IFileStorage fileStorage = selectStorage();
-                    if (downloadFromSrc(src, filePath)) {
-                        fileStorage.uploadFile(filePath);
-                        saveInfo(info, filePath, getFileNameFromUrl(src), fileStorage.getStorageType());
+                    if (downloadFromSrc(src, file)) {
+                        if (!file.getPath().endsWith(".mp4")) {
+                            file = encodeVideo(file);
+                        }
+                        if (file != null && fileStorage.uploadFile(file.getPath())) {
+                            saveInfo(info, file, fileStorage.getStorageType());
+                        }
                     }
                 });
     }
@@ -160,11 +166,11 @@ public class HtmlParser implements IHtmlParser {
 
     private Optional<Document> getConnection(String url, int attemptCount) {
         try {
-            return Optional.ofNullable(Jsoup.connect(url)
+            return Optional.of(Jsoup.connect(url)
                     .userAgent("NING/1.0")
                     .get());
         } catch (IOException e) {
-            log.warn("Can't get document, reason: ", e.getLocalizedMessage());
+            log.warn("Can't get document, reason: ", e.getCause());
             if (attemptCount < 5) {
                 sleep();
                 return getConnection(url, ++attemptCount);
@@ -183,14 +189,14 @@ public class HtmlParser implements IHtmlParser {
         }
     }
 
-    private boolean downloadFromSrc(String url, String fileName) {
+    private boolean downloadFromSrc(String url, File fileName) {
         try {
             log.debug("Start download {}", url);
             URL imgSrc = new URL(url);
             URLConnection con = imgSrc.openConnection();
             con.setRequestProperty("User-Agent", "NING/1.0");
             InputStream is = con.getInputStream();
-            FileUtils.copyInputStreamToFile(is, new File(fileName));
+            FileUtils.copyInputStreamToFile(is, fileName);
             return true;
         } catch (IOException e) {
             log.error("Can't download from url: {}, reason: {}", url, e.getCause());
@@ -198,14 +204,16 @@ public class HtmlParser implements IHtmlParser {
         }
     }
 
-    private void saveInfo(ContentInfo info, String contentPath, String fileName, StorageType storageType) {
+    private void saveInfo(ContentInfo info, File file, StorageType storageType) {
+        File image = null;
         try {
-            byte[] image = VideoHelper.getImageFromVideo(contentPath);
-            int[] videoSize = VideoHelper.getVideoSize(contentPath);
+            image = VideoHelper.getImageFromVideo(file.getPath());
+            int[] videoSize = VideoHelper.getVideoSize(image);
 
-            Content content = createContent(contentPath, storageType, image);
-            Video video = createVideo(fileName, videoSize, content.getId());
+            Content content = createContent(file, storageType, image);
+            Video video = createVideo(file.getName(), videoSize);
             content.setVideo(video);
+            video.setContent(content);
 
             Set<Tags> tags = tagsService.findTags(info.getTags());
             content.setContentTags(tags);
@@ -214,28 +222,28 @@ public class HtmlParser implements IHtmlParser {
                 tagsService.save(tag);
             });
         } catch (Exception e) {
-            log.error("Can't prepare content " + contentPath, e);
+            log.error("Can't prepare content " + file, e);
         } finally {
-            FileUtils.deleteQuietly(new File(contentPath));
+            FileUtils.deleteQuietly(image);
+            FileUtils.deleteQuietly(file);
         }
     }
 
-    private Content createContent(String contentPath, StorageType storageType, byte[] image) {
+    private Content createContent(File file, StorageType storageType, File image) throws IOException {
         Content content = new Content();
-        content.setPath(contentPath);
-        content.setImage(image);
-        content.setLength(new File(contentPath).length());
+        content.setPath(file.getName());
+        content.setImage(Files.readAllBytes(image.toPath()));
+        content.setLength(file.length());
         content.setStorage(storageType.name());
         return contentService.save(content);
     }
 
-    private Video createVideo(String fileName, int[] videoSize, long contentId) {
+    private Video createVideo(String fileName, int[] videoSize) {
         Video video = new Video();
         video.setName(fileName);
         video.setDate(System.currentTimeMillis());
         video.setWidth(videoSize[0]);
         video.setHeight(videoSize[1]);
-        video.setContentId(contentId);
         return videoService.save(video);
     }
 

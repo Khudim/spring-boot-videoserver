@@ -3,6 +3,7 @@ package com.khudim.dao.repository;
 import com.khudim.dao.entity.Content;
 import com.khudim.dao.entity.Tags;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
@@ -15,7 +16,7 @@ import java.util.Set;
  * Created by Beaver.
  */
 @Repository
-public interface ContentRepository extends CrudRepository<Content, Long> {
+public interface ContentRepository extends JpaRepository<Content, Long>, CrudRepository<Content, Long> {
 
     @Query("SELECT c.image FROM Content c WHERE c.id = :contentId")
     byte[] findImageById(@Param("contentId") long contentId);

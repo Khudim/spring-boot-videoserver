@@ -15,18 +15,15 @@ spring:
     password: password
   jpa:
     show-sql: false
-scanner:
-   cron: '0 0 0 */3 * ?'
-   directory: F:/video/
-   tmpDir: F:/tmp/
 
 video:
    imageEncoderCmd: ffmpeg -ss 00:00:01 -i <image> -vframes 1 -q:v 31 <file> -y
-   videoSizeCmd: ffprobe -v error -show_entries stream=width,height -of default=noprint_wrappers=1 <video>
+   videoEncodeCmd:
+   tmpDir: F:/tmp/
 
 parser:
    cron: '0 0 0 */3 * ?'
-   directory: ${scanner.directory}
+   directory: ${video.tmpDir}
 
 storage:
    drop-box:

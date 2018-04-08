@@ -102,10 +102,10 @@ public class ContentRepositoryTest {
         contentRepository.save(content);
         Video video = new Video();
         video.setName("n");
-        video.setContentId(content.getId());
+        video.setContent(content);
         videoRepository.save(video);
         content.setVideo(video);
         video = videoRepository.findFirstByName("n");
-        Assert.assertEquals(content.getId(), video.getContentId());
+        Assert.assertEquals(content.getId(), video.getContent().getId());
     }
 }

@@ -17,8 +17,11 @@ public class Video implements Serializable {
     private long id;
     private String name;
     private long date;
-    private long contentId;
+    //  private long contentId;
     private int width;
     private int height;
+    @PrimaryKeyJoinColumn
+    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    private Content content;
 
 }

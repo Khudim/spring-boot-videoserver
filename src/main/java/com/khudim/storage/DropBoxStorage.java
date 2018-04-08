@@ -75,7 +75,7 @@ public class DropBoxStorage implements IFileStorage {
                     .uploadAndFinish(in);
             return true;
         } catch (Exception e) {
-            log.error("Can't upload file to {} storage, reason: {}", storageType, e.getCause());
+            log.error("Can't upload file to {} storage, reason: {}", storageType, e);
             return false;
         }
     }

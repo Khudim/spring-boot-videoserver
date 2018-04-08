@@ -3,6 +3,7 @@ package com.khudim.controller;
 import com.khudim.dao.entity.Content;
 import com.khudim.dao.entity.Video;
 import com.khudim.dao.service.ContentService;
+import com.khudim.dao.service.TagsService;
 import com.khudim.storage.IFileStorage;
 import com.khudim.utils.VideoHelper;
 import lombok.Data;
@@ -31,11 +32,13 @@ public class ContentController {
     private static Logger log = LoggerFactory.getLogger(ContentController.class);
 
     private final ContentService contentService;
+    private final TagsService tagService;
     private final List<IFileStorage> fileStorages;
 
     @Autowired
-    public ContentController(ContentService contentService, List<IFileStorage> fileStorages) {
+    public ContentController(ContentService contentService, TagsService tagService, List<IFileStorage> fileStorages) {
         this.contentService = contentService;
+        this.tagService = tagService;
         this.fileStorages = fileStorages;
     }
 
@@ -54,6 +57,11 @@ public class ContentController {
         return contentService.getImage(contentId);
     }
 
+    @GetMapping(value = "/tags")
+    public List<String> getTopTags() {
+        return tagService.findTop10();
+    }
+
     @GetMapping(value = "/video/{contentId}")
     public ResponseEntity<byte[]> downloadVideo(@PathVariable long contentId,
                                                 HttpServletResponse response,
@@ -62,10 +70,7 @@ public class ContentController {
         byte[] bytes = new byte[0];
         try {
             Content content = contentService.getContent(contentId);
-            IFileStorage fileStorage = fileStorages.stream()
-                    .filter(storage -> storage.getStorageType().name().equals(content.getStorage()))
-                    .findFirst()
-                    .orElseThrow(Exception::new);
+            IFileStorage fileStorage = findStorage(content);
 
             if (range == null) {
                 bytes = fileStorage.downloadFile(content.getPath());
@@ -88,6 +93,13 @@ public class ContentController {
             status = HttpStatus.INTERNAL_SERVER_ERROR;
         }
         return new ResponseEntity<>(bytes, status);
+    }
+
+    private IFileStorage findStorage(Content content) throws Exception {
+        return fileStorages.stream()
+                .filter(storage -> storage.getStorageType().name().equals(content.getStorage()))
+                .findFirst()
+                .orElseThrow(Exception::new);
     }
 
     @Data
