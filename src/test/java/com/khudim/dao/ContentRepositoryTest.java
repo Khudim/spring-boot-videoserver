@@ -9,6 +9,7 @@ import com.khudim.dao.repository.VideoRepository;
 import com.khudim.storage.StorageType;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,7 @@ import static org.springframework.data.domain.PageRequest.of;
  */
 @RunWith(SpringRunner.class)
 @DataJpaTest
+@Ignore
 public class ContentRepositoryTest {
 
     @Autowired

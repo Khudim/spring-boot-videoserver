@@ -11,15 +11,15 @@ controller:
 spring:
   datasource:
     url: ${DATABASE_URL} #jdbc:postgresql://localhost:5432/contentdb
-    username: ${PGUSER} #postgres
-    password: ${PGPASSWORD} #password
+   # username: ${PGUSER} #postgres
+   # password: ${PGPASSWORD} #password
   jpa:
     show-sql: false
 
 video:
    imageEncoderCmd: ffmpeg -ss 00:00:01 -i <image> -vframes 1 -q:v 31 <file> -y
    videoEncodeCmd:
-   tmpDir: F:/tmp/
+   tmpDir: /tmp/
 
 parser:
    cron: '0 0 0 */3 * ?'
