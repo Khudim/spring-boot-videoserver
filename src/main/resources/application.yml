@@ -10,9 +10,9 @@ controller:
     threads: 20
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/contentdb
-    username: postgres
-    password: password
+    url: ${DATABASE_URL} #jdbc:postgresql://localhost:5432/contentdb
+    username: ${PGUSER} #postgres
+    password: ${PGPASSWORD} #password
   jpa:
     show-sql: false
 
