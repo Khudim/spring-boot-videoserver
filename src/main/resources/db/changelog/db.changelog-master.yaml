@@ -22,9 +22,6 @@ databaseChangeLog:
                   name: date
                   type: bigint
               - column:
-                  name: content_id
-                  type: bigint
-              - column:
                   name: width
                   type: int
               - column:
@@ -53,12 +50,7 @@ databaseChangeLog:
               - column:
                   name: storage
                   type: varchar(255)
-              - column:
-                  name: video_id
-                  type: bigint
-                  constraints:
-                           foreignKeyName: fk_content_video
-                           references: video(id)
+
         - createTable:
             tableName: tags
             columns:

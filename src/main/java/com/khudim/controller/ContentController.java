@@ -42,7 +42,7 @@ public class ContentController {
         this.fileStorages = fileStorages;
     }
 
-    @GetMapping(value = "/content")
+    @PostMapping(value = "/content")
     public ResponseContent getVideo(@RequestParam(required = false) List<String> tags, @RequestParam int page, @RequestParam int limit) {
         long count = contentService.getCount(tags, fileStorages);
         List<Video> videos = contentService.findByTag(tags, page, limit, fileStorages)
@@ -78,7 +78,7 @@ public class ContentController {
             } else {
                 String[] ranges = VideoHelper.parseRanges(range);
                 int offset = toInt(ranges[0]);
-                int limit = (ranges.length < 2 || "-1".equals(ranges[1])) ? (int) content.getLength() : toInt(ranges[1]);
+                int limit = getLimit(content, ranges);
                 bytes = fileStorage.downloadFile(content.getPath(), offset, limit);
                 response.setHeader("Accept-Ranges", "bytes");
                 response.setHeader("Content-Range", "bytes " + offset + "-" + (limit - 1) + "/" + content.getLength());
@@ -100,6 +100,10 @@ public class ContentController {
                 .filter(storage -> storage.getStorageType().name().equals(content.getStorage()))
                 .findFirst()
                 .orElseThrow(Exception::new);
+    }
+
+    private int getLimit(Content content, String[] ranges) {
+        return (ranges.length < 2 || "-1".equals(ranges[1])) ? (int) content.getLength() : toInt(ranges[1]);
     }
 
     @Data
